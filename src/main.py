@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
     logger.info("Database engine disposed")
 
 
-app = FastAPI(title="My FastAPI App", lifespan=lifespan)
+app = FastAPI(title="Wedding RSVP API", lifespan=lifespan)
 app.state.limiter = limiter
 
 # CORS middleware

@@ -1,6 +1,6 @@
-# FastAPI Template
+# Wedding RSVP — Backend
 
-A modern FastAPI template with async SQLModel, Alembic migrations, Docker support, PyJWT-based auth, and a clean domain-driven layout.
+Backend API for a wedding RSVP site: FastAPI with async SQLModel, Alembic migrations, Docker support, PyJWT-based auth, and a domain-driven layout.
 
 ## Features
 
@@ -58,10 +58,10 @@ This installs `uv` globally via pip. Simple and works for most cases.
 ```bash
 # Create a pyenv virtualenv with the project's Python version
 # The virtualenv name includes the Python version for clarity
-pyenv virtualenv $(cat .python-version) fast-api-template-$(cat .python-version)
+pyenv virtualenv $(cat .python-version) wedding-rsvp-be-$(cat .python-version)
 
 # Activate it
-pyenv activate fast-api-template-$(cat .python-version)
+pyenv activate wedding-rsvp-be-$(cat .python-version)
 
 # Install uv in this virtualenv
 make install-uv
@@ -78,7 +78,7 @@ This creates a `.env` file from `.env.example`. Review and update the values if 
 
 **Note:** `.env` is gitignored - it contains your local development secrets. In staging/production, environment variables are set directly in the deployment platform (Docker, Kubernetes, cloud services, etc.).
 
-**Secrets:** Change **`JWT_SECRET_KEY`** (and any other defaults) before deploying. The template ships dev-friendly defaults only.
+**Secrets:** Change **`JWT_SECRET_KEY`** (and any other defaults) before deploying. Development defaults are not suitable for production.
 
 **What the app reads:** Pydantic **`Settings`** only require **`DATABASE_URL`** (plus optional flags such as `DEBUG`, CORS, JWT, logging). The **`POSTGRES_*`** variables in `.env.example` exist for the **Docker Compose `db` service**; Compose substitutes them into the Postgres container—they are not loaded into `Settings`.
 

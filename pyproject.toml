@@ -1,7 +1,7 @@
 [project]
-name = "fast-api-template"
+name = "wedding-rsvp-be"
 version = "0.1.0"
-description = "FastAPI template with async SQLModel, PostgreSQL, Alembic, JWT auth, and Docker"
+description = "Backend API for a wedding RSVP site (FastAPI, async SQLModel, PostgreSQL, Alembic, JWT auth, Docker)"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
