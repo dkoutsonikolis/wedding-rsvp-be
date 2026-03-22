@@ -1,0 +1,11 @@
+---
+description: Point Cursor at repository agent instructions before substantive edits
+alwaysApply: true
+---
+
+## Before you change this repo
+
+1. Read **`AGENTS.md`** at the repository root.
+2. For every file you create or edit, read each **`.github/instructions/*.instructions.md`** whose YAML **`applyTo`** glob matches that path, and follow the markdown body.
+
+Treat those sources as the project’s conventions (layering, tests, API shape, etc.). Prefer matching existing modules (`api/messages`, `api/users`, `domains/*`) when unsure.

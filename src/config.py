@@ -1,0 +1,37 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # Ignore extra env vars (e.g. app-specific secrets in downstream projects)
+    )
+
+    # Application database (PostgreSQL async URL). Compose-only vars like POSTGRES_USER live in .env
+    # for the db service but are not read by this app.
+    DATABASE_URL: str
+    DEBUG: bool = False
+
+    # CORS settings
+    CORS_ORIGINS: str = "*"  # Comma-separated list of allowed origins, or "*" for all
+    CORS_CREDENTIALS: bool = True
+    CORS_METHODS: str = "*"  # Comma-separated list of allowed methods, or "*" for all
+    CORS_HEADERS: str = "*"  # Comma-separated list of allowed headers, or "*" for all
+
+    # Logging settings
+    LOG_REQUESTS: bool = True  # Enable request/response logging middleware
+
+    # JWT (access + refresh; login, POST /api/v1/auth/refresh)
+    JWT_SECRET_KEY: str = "change-this-jwt-secret-key-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Rate limits for auth routes (slowapi format, e.g. "10/minute")
+    RATE_LIMIT_AUTH_REGISTER: str = "5/minute"
+    RATE_LIMIT_AUTH_LOGIN: str = "10/minute"
+    RATE_LIMIT_AUTH_REFRESH: str = "30/minute"
+
+
+settings = Settings()  # type: ignore[call-arg]

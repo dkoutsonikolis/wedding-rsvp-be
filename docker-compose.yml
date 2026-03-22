@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      target: development
+    env_file: .env
+    environment:
+      - PYTHONPATH=/app/src
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      # Mount tests directory
+      - ./tests:/app/tests
+      # Mount dependency files so 'add' command works in container
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock

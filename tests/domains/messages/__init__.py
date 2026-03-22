@@ -1,0 +1,2 @@
+# Messages domain tests package
+
