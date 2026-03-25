@@ -14,7 +14,7 @@ applyTo: "src/**/*.py"
 
 1. **Correctness & security** (secrets, authz, SQL injection, transactional integrity)
 2. **Layering** (API thin → service → repository → DB)
-3. **Consistency** with existing modules in this repo (mirror `messages` / `users` patterns)
+3. **Consistency** with existing modules in this repo (mirror `wedding_sites` / `users` patterns)
 4. **Style** (comments, docstrings)
 
 ---
@@ -23,7 +23,7 @@ applyTo: "src/**/*.py"
 
 - **Imports:** `from config import settings`, `from domains...`, `from api...` — **never** `from src....`
 - **Database access:** Only inside **repository** methods for that domain. **Services** call their domain’s repository. **Another domain’s data:** call that domain’s **service**, not its repository, from your service.
-- **HTTP layer:** Request/response bodies use **Pydantic schemas** (`api/<domain>/schemas.py`). Do **not** expose SQLModel/table models as `response_model` or body params on routes (use DTOs like `MessageRead`, `UserPublic`).
+- **HTTP layer:** Request/response bodies use **Pydantic schemas** (`api/<domain>/schemas.py`). Do **not** expose SQLModel/table models as `response_model` or body params on routes (use DTOs like `UserPublic` or domain-specific `*Read` / `*Create` types).
 - **Versioned routes:** New public HTTP endpoints live under **`/api/v1/...`** via routers included from `main.py` on `api_v1`. **Exception:** infrastructure routes **`/health`**, **`/ready`** stay on the app root.
 - **Errors:** For documented OpenAPI errors on a route, use **`get_error_response(...)`** from `api.common` in `add_api_route(..., responses={...})`.
 - **Logging:** Use **`get_logger(__name__)`** from `utils.logging` — **no** `print()`.
@@ -35,9 +35,9 @@ applyTo: "src/**/*.py"
 
 - **One class per file** for model, repository, and service in a domain. Multiple small related functions in one module are OK (e.g. `password.py`, `jwt.py`).
 - **Enums:** Domain enums in `domains/<domain>/enums.py`, imported from models — not defined inline in `models.py`.
-- **Naming:** Domain folder names plural (`users`, `messages`). Classes: `UsersRepository`, `UsersService`, dependency `get_users_service`. Prefer **`routers.py`** when a domain exposes more than one router (e.g. `auth_router` + `users_router`).
+- **Naming:** Domain folder names plural (`users`, `wedding_sites`). Classes: `UsersRepository`, `UsersService`, dependency `get_users_service`. Prefer **`routers.py`** when a domain exposes more than one router (e.g. `auth_router` + `users_router`).
 - **Endpoints:** One **route handler function** per file (`list.py`, `create.py`, …). Handler stays thin: validate input, call service, map to output schema.
-- **Routers:** Prefer **flat** inclusion in `main.py` under `api_v1` — avoid deep nesting of routers (reduces duplicate tags in OpenAPI). Use **`tags=[...]`** for how the API reads to clients (`auth`, `users`, `messages`), not for internal folder names.
+- **Routers:** Prefer **flat** inclusion in `main.py` under `api_v1` — avoid deep nesting of routers (reduces duplicate tags in OpenAPI). Use **`tags=[...]`** for how the API reads to clients (`auth`, `users`, `wedding-sites`, …), not for internal folder names.
 - **IDs:** API-exposed aggregate roots **SHOULD** use **`UUID`** + `default_factory=uuid4`. Internal/reference tables **MAY** use `int` PKs; never `id: int | None = Field(default=None, primary_key=True)` — PKs are required in the type system.
 
 ---
@@ -74,5 +74,5 @@ FKs to UUID entities use **`UUID`**.
 
 ## If you are unsure
 
-- Copy the **shape** of the smallest existing domain (`messages`) or **`users`** (auth + `users_router`).
+- Copy the **shape** of **`users`** (auth + `users_router`) or **`wedding_sites`** (domain-only until HTTP is added).
 - Prefer **adding** `schemas.py` DTOs over widening ORM models for API contracts.

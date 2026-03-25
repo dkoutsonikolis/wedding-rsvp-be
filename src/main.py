@@ -10,7 +10,6 @@ from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.common.schemas import ErrorResponse
-from api.messages import messages_router
 from api.users import auth_router, users_router
 from config import settings
 from db.db import engine, get_session
@@ -144,6 +143,5 @@ async def ready(session: AsyncSession = Depends(get_session)):
 api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(auth_router)
 api_v1.include_router(users_router)
-api_v1.include_router(messages_router)
 
 app.include_router(api_v1)

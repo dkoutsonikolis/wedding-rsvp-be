@@ -52,7 +52,7 @@ def get_logger(name: str | None = None) -> logging.Logger:
         logger.error("An error occurred", exc_info=True)
 
     Why use __name__:
-    - Creates a logger hierarchy (e.g., "domains.messages.service")
+    - Creates a logger hierarchy (e.g., "domains.users.service")
     - Makes it easy to identify where logs come from
     - Allows fine-grained control per module if needed
 

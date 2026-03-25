@@ -1,2 +1,0 @@
-# Messages API tests package
-

@@ -26,7 +26,6 @@ if not database_url:
 config.set_main_option("sqlalchemy.url", database_url)
 
 # Import your models here for 'autogenerate' support
-from domains.messages.models import Message  # noqa: E402, F401
 from domains.users.models import User  # noqa: E402, F401
 from domains.wedding_sites.models import WeddingSite  # noqa: E402, F401
 

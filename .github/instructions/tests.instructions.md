@@ -32,7 +32,7 @@ Place real code under each; leave no step empty without reason.
 
 ## SHOULD
 
-- **Fixtures:** Build data via **`tests/fixtures/`** and factories (`message_factory`, register + login for tokens) instead of inlining large setup in every test.
+- **Fixtures:** Build data via **`tests/fixtures/`** and factories (`wedding_site_factory`, register + login for tokens) instead of inlining large setup in every test.
 - **API tests** (`tests/api/`): status codes, response keys (including **absent** secrets: `password`, `password_hash`), **`{"detail": ...}`** error shape where applicable, one happy path per feature unless regressions need more.
 - **Service tests** (`tests/domains/`): business rules, exception types (`pytest.raises`), edge cases, and combinations API tests skip.
 
@@ -70,4 +70,4 @@ Example:
 
 ## If you are unsure
 
-- Open an existing test in the same layer (`tests/api/messages/` or `tests/domains/users/`) and **match its patterns** (fixtures, client usage, assertions).
+- Open an existing test in the same layer (`tests/api/users/` or `tests/domains/wedding_sites/`) and **match its patterns** (fixtures, client usage, assertions).

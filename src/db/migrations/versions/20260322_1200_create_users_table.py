@@ -1,7 +1,7 @@
 """create users table
 
 Revision ID: 7c2a9f1b4d60
-Revises: f89482c5b3e8
+Revises:
 Create Date: 2026-03-22
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
 revision: str = "7c2a9f1b4d60"
-down_revision: Union[str, Sequence[str], None] = "f89482c5b3e8"
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

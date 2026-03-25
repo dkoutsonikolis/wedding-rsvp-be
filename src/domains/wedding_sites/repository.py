@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from domains.wedding_sites.models import WeddingSite
@@ -54,5 +54,5 @@ class WeddingSitesRepository:
             raise
 
     async def delete(self, site: WeddingSite) -> None:
-        await self.session.exec(delete(WeddingSite).where(WeddingSite.id == site.id))
+        await self.session.exec(delete(WeddingSite).where(col(WeddingSite.id) == site.id))
         await self.session.commit()

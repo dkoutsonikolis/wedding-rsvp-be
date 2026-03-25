@@ -19,7 +19,7 @@ Backend API for a wedding RSVP site: FastAPI with async SQLModel, Alembic migrat
 - 🚢 **GitHub Actions** CI/CD for automated testing and linting
 - 🔐 **Auth** — register, login, **refresh tokens** (rotated on `POST /api/v1/auth/refresh`), **`GET /api/v1/user`** (Bearer access JWT) with bcrypt and **PyJWT**; **rate limits** on auth routes via **slowapi**
 - 📋 **Consistent API errors** — validation and HTTP exceptions return `{ "detail": "..." }` via shared schemas
-- 📤 **API response models** — example `messages` routes return Pydantic DTOs (`MessageRead`), not raw ORM objects
+- 📤 **API response models** — HTTP handlers use Pydantic DTOs (e.g. `UserPublic`), not raw ORM objects on the wire
 
 ## Prerequisites
 
@@ -122,7 +122,6 @@ This installs pre-commit hooks that automatically run code quality checks (forma
 - **Liveness**: `GET /health` — process is up (no dependency checks)
 - **Readiness**: `GET /ready` — checks database connectivity via the same session dependency as the API (overridden in tests to use `app_db_test`)
 - **Versioned API** (`/api/v1/…`):
-  - `GET|POST /api/v1/messages/` — example resource (list + create)
   - `POST /api/v1/auth/register` — create user (`email`, `password` min 8 characters); response is `{ id, email }`
   - `POST /api/v1/auth/login` — returns `access_token`, `refresh_token`, `expires_in` / `refresh_expires_in` (seconds), and `user`
   - `POST /api/v1/auth/refresh` — body `{ "refresh_token": "..." }`; returns a new token pair (previous refresh JWTs are not blacklisted—stateless rotation only)
@@ -140,8 +139,8 @@ This installs pre-commit hooks that automatically run code quality checks (forma
 make test
 
 # Run specific test file
-make test path=tests/api/messages/test_create.py
 make test path=tests/api/users/test_login.py
+make test path=tests/domains/wedding_sites/test_service.py
 
 # Run tests in a specific directory
 make test path=tests/api/
@@ -240,13 +239,12 @@ make down
 │   ├── config.py            # Settings and configuration
 │   ├── api/                 # API layer (HTTP handlers, schemas)
 │   │   ├── common/          # Shared API types, `get_current_user`, error helpers
-│   │   ├── messages/        # Example resource
 │   │   └── users/           # Auth: register / login (JWT)
 │   ├── db/                  # Database configuration
 │   │   ├── db.py            # Database engine and session
 │   │   └── migrations/      # Alembic migrations
 │   ├── domains/             # Domain modules (business logic)
-│   │   ├── messages/        # Example domain (models, repository, service, dependencies)
+│   │   ├── wedding_sites/   # Wedding sites (models, repository, service, dependencies)
 │   │   └── users/           # Users + auth helpers (models, repository, service, password, jwt, …)
 │   ├── middleware/          # Custom middleware
 │   └── utils/               # Utility functions
@@ -271,9 +269,9 @@ make down
 The project uses a clean import style without the `src.` prefix. The `src/` directory is added to `PYTHONPATH` (via Docker environment variables and test configuration), so imports look like:
 
 ```python
-from api.messages.schemas import MessageRead
-from domains.messages.models import Message
+from api.users.schemas import UserPublic
 from domains.users.models import User
+from domains.wedding_sites.models import WeddingSite
 from config import settings
 from db.db import get_session
 ```
@@ -281,7 +279,7 @@ from db.db import get_session
 Instead of:
 
 ```python
-from src.domains.messages.models import Message
+from src.domains.users.models import User
 from src.config import settings
 from src.db.db import get_session
 ```

@@ -1,6 +1,6 @@
 # Wedding RSVP backend — implementation plan
 
-This document phases product work for **wedding-rsvp-be**. It complements the existing scaffold (JWT auth, `messages` example module, Alembic, tests).
+This document phases product work for **wedding-rsvp-be**. It complements the existing scaffold (JWT auth, `wedding_sites` domain, Alembic, tests).
 
 ## Implementation status
 
@@ -34,7 +34,7 @@ Use this table to track what is actually built vs still planned. Update the **St
 
 ## Phase 1 — Database tables and first domains (no new public routes yet)
 
-**Goal:** Add persistence for wedding sites and introduce a **`wedding_sites`** domain that mirrors the existing **`messages`** layering. No AI; no requirement for new HTTP endpoints in this phase beyond what you need to ship migrations and domain tests—**Phase 2** exposes the API.
+**Goal:** Add persistence for wedding sites and introduce a **`wedding_sites`** domain with the same layering as **`users`** (repository, service, dependencies). No AI; no requirement for new HTTP endpoints in this phase beyond what you need to ship migrations and domain tests—**Phase 2** exposes the API.
 
 ### 1.1 Tables
 
@@ -88,7 +88,7 @@ One row per wedding website owned by a user.
 
 **Phase 1 tests (recommended)**
 
-- `tests/domains/wedding_sites/`: service/repository tests with DB (patterns like `tests/domains/messages/`).
+- `tests/domains/wedding_sites/`: service/repository tests with DB (patterns like `tests/domains/users/`).
 - No requirement for API tests until Phase 2 if routes do not exist yet.
 
 ---
@@ -206,4 +206,4 @@ You can **defer** `anonymous_agent_sessions` migration until Phase 3, or add the
 ## References
 
 - Layering and API checklist: `.github/instructions/src.instructions.md`
-- Existing patterns: `src/domains/messages/`, `src/api/messages/`, `src/domains/users/`, `src/api/users/`
+- Existing patterns: `src/domains/wedding_sites/`, `src/domains/users/`, `src/api/users/`
