@@ -17,3 +17,4 @@ from tests.fixtures.client import *  # noqa: F403, F401
 from tests.fixtures.database import *  # noqa: F403, F401
 from tests.fixtures.messages import *  # noqa: F403, F401
 from tests.fixtures.users import *  # noqa: F403, F401
+from tests.fixtures.wedding_sites import *  # noqa: F403, F401

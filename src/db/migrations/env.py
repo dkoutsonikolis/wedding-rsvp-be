@@ -2,14 +2,12 @@ import asyncio
 import os
 from logging.config import fileConfig
 
+from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
-from alembic import context
 from sqlmodel import SQLModel
-
-
 
 # Load .env
 load_dotenv()
@@ -28,8 +26,9 @@ if not database_url:
 config.set_main_option("sqlalchemy.url", database_url)
 
 # Import your models here for 'autogenerate' support
-from domains.messages.models import Message  # noqa: E402
-from domains.users.models import User  # noqa: E402
+from domains.messages.models import Message  # noqa: E402, F401
+from domains.users.models import User  # noqa: E402, F401
+from domains.wedding_sites.models import WeddingSite  # noqa: E402, F401
 
 # Metadata for autogeneration
 target_metadata = SQLModel.metadata
