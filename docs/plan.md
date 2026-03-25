@@ -11,7 +11,7 @@ Use this table to track what is actually built vs still planned. Update the **St
 | Phase | Scope | Status | Notes |
 |-------|--------|--------|-------|
 | **0** | Product decisions | `Done` | Captured above; change Status if you revisit a decision. |
-| **1** | `wedding_sites` table + `domains/wedding_sites` | `Done` | Alembic `4d9a2ee8107b`; domain + service tests. |
+| **1** | `wedding_sites` table + `domains/wedding_sites` | `Done` | Alembic rev `4d9a2ee8107b` (`20260325_1200_*`); domain + service tests. |
 | **2** | Auth verification for FE + wedding sites HTTP API | `Not started` | Existing JWT routes in repo; 2.1 is “verify + document,” 2.2 is new routes. |
 | **3** | AI agent (owner + public trial, 3-turn cap) | `Not started` | |
 | **4** | Guests, RSVPs, public invite page | `Not started` | |

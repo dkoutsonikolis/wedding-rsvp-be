@@ -200,6 +200,8 @@ make build  # Rebuild Docker to include new package
 make migrations msg="description of changes"
 ```
 
+Migration filenames use date/time + slug (same pattern as **wealth-sentinel-be**); revision ids inside each file are Alembic’s generated hashes.
+
 ### Stopping Containers
 
 ```bash
