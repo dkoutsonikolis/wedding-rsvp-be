@@ -15,6 +15,7 @@ from api.users import auth_router, users_router
 from api.wedding_sites import wedding_sites_router
 from config import settings
 from db.db import engine, get_session
+from domains.agent.factory import build_agent_backend
 from middleware.limiter import limiter
 from middleware.logging_middleware import RequestLoggingMiddleware
 from utils.logging import get_logger, setup_logging
@@ -29,6 +30,8 @@ async def lifespan(app: FastAPI):
     """Startup/shutdown: dispose async engine on exit."""
     # Startup
     logger.info("Application starting up...")
+    app.state.agent_backend = build_agent_backend(settings)
+    logger.info("Agent backend: %s", type(app.state.agent_backend).__name__)
     if settings.CORS_CREDENTIALS and settings.CORS_ORIGINS.strip() == "*":
         logger.warning(
             "CORS_CREDENTIALS is True but CORS_ORIGINS is '*'. "

@@ -7,6 +7,10 @@ and imported here so they're accessible to all tests.
 
 import os
 
+# Explicit stub backend for the test process (no Gemini, no reliance on .env).
+os.environ["AGENT_BACKEND"] = "stub"
+os.environ["GOOGLE_API_KEY"] = ""
+
 # Auth routes share one client IP in ASGITransport tests; relax limits before `main` import.
 os.environ["RATE_LIMIT_AUTH_REGISTER"] = "10000/minute"
 os.environ["RATE_LIMIT_AUTH_LOGIN"] = "10000/minute"

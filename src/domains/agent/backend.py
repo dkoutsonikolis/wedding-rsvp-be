@@ -1,8 +1,14 @@
-from typing import Any
+from typing import Any, Protocol
+
+
+class AgentBackend(Protocol):
+    async def run(self, *, message: str, config: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+        """Return assistant text and the persisted site config for this turn."""
+        ...
 
 
 class StubAgentBackend:
-    """Placeholder until a real LLM/tool-calling agent is integrated."""
+    """Offline backend for tests and local runs without GOOGLE_API_KEY."""
 
     async def run(self, *, message: str, config: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         clipped = message.strip()[:500]

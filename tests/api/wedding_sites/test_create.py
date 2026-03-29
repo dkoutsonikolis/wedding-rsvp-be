@@ -69,7 +69,8 @@ async def test__create_wedding_site__invalid_slug(
     client: AsyncClient, auth_headers: dict[str, str]
 ):
     # Arrange
-    payload = {"slug": "INVALID"}
+    # Slugs are normalized to lowercase; use characters still forbidden after that (no underscores).
+    payload = {"slug": "bad_slug"}
     # Act
     response = await client.post(
         "/api/v1/wedding-sites",

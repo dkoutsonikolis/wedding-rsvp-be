@@ -9,5 +9,6 @@ Each file has YAML frontmatter with **`applyTo`** (glob patterns from the reposi
 ## Human-oriented docs
 
 - **[`README.md`](README.md)** — setup, Docker, Make, CI, endpoint overview.
+- **Tone & scope:** when editing **`README.md`** or **`docs/**/*.md`**, follow **[`.github/instructions/documentation.instructions.md`](.github/instructions/documentation.instructions.md)** (high-level reader-facing docs; operational detail in `.env.example` / code).
 
 If other repo-wide instruction files are added under **`.github/`** (for any product), **still honor** all matching **`.github/instructions/*.instructions.md`** rules for files that fall under their **`applyTo`** globs.

@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from domains.agent.backend import StubAgentBackend
+from domains.agent.backend import AgentBackend
 from domains.anonymous_agent_sessions.service import (
     TRIAL_INTERACTION_LIMIT,
     AnonymousAgentSessionsService,
@@ -14,11 +14,11 @@ class AgentService:
         self,
         anonymous_sessions: AnonymousAgentSessionsService,
         wedding_sites: WeddingSitesService,
-        backend: StubAgentBackend | None = None,
+        backend: AgentBackend,
     ):
         self._anonymous_sessions = anonymous_sessions
         self._wedding_sites = wedding_sites
-        self._backend = backend or StubAgentBackend()
+        self._backend = backend
 
     async def create_public_session(
         self,

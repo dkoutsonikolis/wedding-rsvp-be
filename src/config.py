@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,8 +41,13 @@ class Settings(BaseSettings):
     RATE_LIMIT_PUBLIC_AGENT_SESSION: str = "30/minute"
     RATE_LIMIT_PUBLIC_AGENT_TURN: str = "60/minute"
 
+    # Agent: explicit backend choice (set in .env; factory runs at app startup).
+    # auto = Gemini if GOOGLE_API_KEY is set, else stub.
+    AGENT_BACKEND: Literal["auto", "stub", "gemini"] = "auto"
+
     # Gemini via Generative Language API (same env name as Pydantic AI / google-genai).
     GOOGLE_API_KEY: str | None = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
 
 settings = Settings()  # type: ignore[call-arg]
