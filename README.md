@@ -1,6 +1,6 @@
 # Wedding RSVP — Backend
 
-Backend API for a wedding RSVP site: FastAPI with async SQLModel, Alembic migrations, Docker support, PyJWT-based auth, and a domain-driven layout.
+Backend API for a wedding RSVP site: FastAPI with async SQLModel, Alembic migrations, Docker support, PyJWT-based auth, wedding site CRUD, and a stub conversational agent (public 3-turn trial + owner turns; swap in an LLM later), in a domain-driven layout.
 
 ## Features
 
@@ -128,7 +128,9 @@ This installs pre-commit hooks that automatically run code quality checks (forma
   - `POST /api/v1/auth/refresh` — body `{ "refresh_token": "..." }`; returns a new token pair (previous refresh JWTs are not blacklisted—stateless rotation only)
   - `GET /api/v1/user` — current user; same Bearer header as below
   - **Wedding sites** (Bearer required) — `GET|POST /api/v1/wedding-sites`, `GET|PATCH|DELETE /api/v1/wedding-sites/{site_id}`; **409** if `slug` is taken, **404** if the id is missing or not yours, **422** for invalid slug format. `POST` body: optional `slug`, `title`, `status` (`draft`|`published`), `config` (object), `schema_version`. `PATCH` accepts any subset of those fields. `DELETE` returns **204** with an empty body.
-- **Rate limits** (per client IP by default): register `5/minute`, login `10/minute`, refresh `30/minute` — override with `RATE_LIMIT_AUTH_*` in `.env`
+  - **Public agent trial** (no Bearer) — `POST /api/v1/public/agent/sessions` returns `session_token`, `interactions_remaining: 3`, `config`. `POST /api/v1/public/agent/turn` with `{ session_token, message, config? }` returns `{ message, config, interactions_remaining }` (stub assistant until an LLM is wired). **401** if token missing/invalid/expired; **403** after **3** successful turns per session. Tokens are stored **hashed**; optional `ANONYMOUS_AGENT_TOKEN_PEPPER` in `.env`.
+  - **Owner agent turn** (Bearer required) — `POST /api/v1/wedding-sites/{site_id}/agent/turn` with `{ message, config? }`; merges into **`WeddingSite.config`**; response includes `interactions_remaining: null` (no trial cap).
+- **Rate limits** (per client IP by default): register `5/minute`, login `10/minute`, refresh `30/minute`; public agent session create `30/minute`, turn `60/minute` — override with `RATE_LIMIT_AUTH_*`, `RATE_LIMIT_PUBLIC_AGENT_*` in `.env`
 - **API Docs**: http://localhost:8000/docs
 - **Alternative Docs**: http://localhost:8000/redoc
 
@@ -241,12 +243,16 @@ make down
 │   ├── config.py            # Settings and configuration
 │   ├── api/                 # API layer (HTTP handlers, schemas)
 │   │   ├── common/          # Shared API types, `get_current_user`, error helpers
+│   │   ├── agent/           # Shared agent DTOs (turn request/response)
 │   │   ├── users/           # Auth: register / login (JWT)
-│   │   └── wedding_sites/   # Wedding sites HTTP API (owner CRUD)
+│   │   ├── public/          # Public agent trial routes
+│   │   └── wedding_sites/   # Wedding sites CRUD + owner agent turn
 │   ├── db/                  # Database configuration
 │   │   ├── db.py            # Database engine and session
 │   │   └── migrations/      # Alembic migrations
 │   ├── domains/             # Domain modules (business logic)
+│   │   ├── agent/           # Orchestration + stub backend (real LLM later)
+│   │   ├── anonymous_agent_sessions/ # Trial sessions (token hash, cap, config)
 │   │   ├── wedding_sites/   # Wedding sites (models, repository, service, dependencies)
 │   │   └── users/           # Users + auth helpers (models, repository, service, password, jwt, …)
 │   ├── middleware/          # Custom middleware

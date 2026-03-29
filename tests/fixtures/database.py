@@ -166,6 +166,11 @@ async def test_engine(test_database):
         pool_pre_ping=True,
     )
 
+    # Register all SQLModel table classes before create_all
+    import domains.anonymous_agent_sessions.models  # noqa: F401
+    import domains.users.models  # noqa: F401
+    import domains.wedding_sites.models  # noqa: F401
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)

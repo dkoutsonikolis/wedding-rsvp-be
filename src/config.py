@@ -33,5 +33,11 @@ class Settings(BaseSettings):
     RATE_LIMIT_AUTH_LOGIN: str = "10/minute"
     RATE_LIMIT_AUTH_REFRESH: str = "30/minute"
 
+    # Anonymous agent trial (Phase 3)
+    ANONYMOUS_AGENT_TOKEN_PEPPER: str = ""
+    ANONYMOUS_AGENT_SESSION_TTL_DAYS: int = 7
+    RATE_LIMIT_PUBLIC_AGENT_SESSION: str = "30/minute"
+    RATE_LIMIT_PUBLIC_AGENT_TURN: str = "60/minute"
+
 
 settings = Settings()  # type: ignore[call-arg]

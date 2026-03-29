@@ -2,8 +2,10 @@ from typing import Any
 
 from fastapi import APIRouter, status
 
+from api.agent.schemas import AgentTurnResponse
 from api.common import get_error_response
 
+from .agent_turn import agent_turn_for_site
 from .create import create_wedding_site
 from .delete import delete_wedding_site
 from .get_one import get_wedding_site
@@ -47,6 +49,25 @@ wedding_sites_router.add_api_route(
         ),
     },
     summary="Create a wedding site",
+)
+
+wedding_sites_router.add_api_route(
+    "/{site_id}/agent/turn",
+    agent_turn_for_site,
+    methods=["POST"],
+    response_model=AgentTurnResponse,
+    responses={
+        **_auth_responses,
+        status.HTTP_404_NOT_FOUND: get_error_response(
+            status.HTTP_404_NOT_FOUND,
+            "Wedding site not found",
+        ),
+        status.HTTP_422_UNPROCESSABLE_CONTENT: get_error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Validation error",
+        ),
+    },
+    summary="Owner agent turn (persists WeddingSite.config; stub reply until LLM is wired)",
 )
 
 wedding_sites_router.add_api_route(

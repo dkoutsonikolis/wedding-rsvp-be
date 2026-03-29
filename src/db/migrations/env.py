@@ -26,6 +26,7 @@ if not database_url:
 config.set_main_option("sqlalchemy.url", database_url)
 
 # Import your models here for 'autogenerate' support
+from domains.anonymous_agent_sessions.models import AnonymousAgentSession  # noqa: E402, F401
 from domains.users.models import User  # noqa: E402, F401
 from domains.wedding_sites.models import WeddingSite  # noqa: E402, F401
 
