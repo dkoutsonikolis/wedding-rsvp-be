@@ -2,9 +2,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from domains.agent.backend import StubAgentBackend
 from domains.agent.factory import build_agent_backend
-from domains.agent.gemini_backend import GeminiAgentBackend
+from domains.agent.structured_agent_backend import StructuredAgentBackend
+from domains.agent.stub_backend import StubAgentBackend
 
 
 def _ns(**kwargs: object) -> SimpleNamespace:
@@ -41,7 +41,7 @@ def test__build_agent_backend__auto_with_key():
     # Act
     backend = build_agent_backend(cfg)
     # Assert
-    assert isinstance(backend, GeminiAgentBackend)
+    assert isinstance(backend, StructuredAgentBackend)
 
 
 def test__build_agent_backend__gemini_without_key():

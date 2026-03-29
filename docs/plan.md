@@ -207,3 +207,4 @@ You can **defer** `anonymous_agent_sessions` migration until Phase 3, or add the
 
 - Layering and API checklist: `.github/instructions/src.instructions.md`
 - Existing patterns: `src/domains/wedding_sites/`, `src/domains/users/`, `src/api/users/`
+- Builder assistant milestones (prompt, guards, tools): [`docs/AGENT_PLAN.md`](AGENT_PLAN.md)

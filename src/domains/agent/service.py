@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from domains.agent.backend import AgentBackend
+from domains.agent.ports import AgentBackend
 from domains.anonymous_agent_sessions.service import (
     TRIAL_INTERACTION_LIMIT,
     AnonymousAgentSessionsService,

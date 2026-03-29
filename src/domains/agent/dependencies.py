@@ -4,7 +4,7 @@ from fastapi import Depends, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from db.db import get_session
-from domains.agent.backend import AgentBackend
+from domains.agent.ports import AgentBackend
 from domains.agent.service import AgentService
 from domains.anonymous_agent_sessions.repository import AnonymousAgentSessionsRepository
 from domains.anonymous_agent_sessions.service import AnonymousAgentSessionsService

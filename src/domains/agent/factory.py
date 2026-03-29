@@ -2,8 +2,9 @@
 
 from typing import Literal, Protocol
 
-from domains.agent.backend import AgentBackend, StubAgentBackend
-from domains.agent.gemini_backend import GeminiAgentBackend
+from domains.agent.ports import AgentBackend
+from domains.agent.providers import GeminiBackendConfig, structured_agent_backend_from_gemini
+from domains.agent.stub_backend import StubAgentBackend
 
 AgentBackendKind = Literal["auto", "stub", "gemini"]
 
@@ -31,16 +32,20 @@ def build_agent_backend(settings: AgentBackendConfig) -> AgentBackend:
         key = (settings.GOOGLE_API_KEY or "").strip()
         if not key:
             raise RuntimeError("AGENT_BACKEND=gemini requires GOOGLE_API_KEY (see .env.example).")
-        return GeminiAgentBackend(
-            api_key=key,
-            model_name=(settings.GEMINI_MODEL or "gemini-2.5-flash").strip(),
+        return structured_agent_backend_from_gemini(
+            GeminiBackendConfig(
+                api_key=key,
+                model_name=(settings.GEMINI_MODEL or "gemini-2.5-flash").strip(),
+            )
         )
     if kind == "auto":
         key = (settings.GOOGLE_API_KEY or "").strip()
         if key:
-            return GeminiAgentBackend(
-                api_key=key,
-                model_name=(settings.GEMINI_MODEL or "gemini-2.5-flash").strip(),
+            return structured_agent_backend_from_gemini(
+                GeminiBackendConfig(
+                    api_key=key,
+                    model_name=(settings.GEMINI_MODEL or "gemini-2.5-flash").strip(),
+                )
             )
         return StubAgentBackend()
     raise ValueError(
