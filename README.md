@@ -122,10 +122,12 @@ This installs pre-commit hooks that automatically run code quality checks (forma
 - **Liveness**: `GET /health` — process is up (no dependency checks)
 - **Readiness**: `GET /ready` — checks database connectivity via the same session dependency as the API (overridden in tests to use `app_db_test`)
 - **Versioned API** (`/api/v1/…`):
+  - **Frontend integration:** Send **`Authorization: Bearer <access_token>`** on every authenticated request (no cookie session in Phase 2). Point **`CORS_ORIGINS`** at your Next.js dev/prod origin(s). Errors use **`{ "detail": "..." }`**; auth routes may return **429** (rate limit).
   - `POST /api/v1/auth/register` — create user (`email`, `password` min 8 characters); response is `{ id, email }`
-  - `POST /api/v1/auth/login` — returns `access_token`, `refresh_token`, `expires_in` / `refresh_expires_in` (seconds), and `user`
+  - `POST /api/v1/auth/login` — returns `access_token`, `refresh_token`, `token_type` (`bearer`), `expires_in` / `refresh_expires_in` (seconds), and `user`
   - `POST /api/v1/auth/refresh` — body `{ "refresh_token": "..." }`; returns a new token pair (previous refresh JWTs are not blacklisted—stateless rotation only)
-  - `GET /api/v1/user` — current user; send header `Authorization: Bearer <access_token>` (OpenAPI “Authorize” uses the same scheme)
+  - `GET /api/v1/user` — current user; same Bearer header as below
+  - **Wedding sites** (Bearer required) — `GET|POST /api/v1/wedding-sites`, `GET|PATCH|DELETE /api/v1/wedding-sites/{site_id}`; **409** if `slug` is taken, **404** if the id is missing or not yours, **422** for invalid slug format. `POST` body: optional `slug`, `title`, `status` (`draft`|`published`), `config` (object), `schema_version`. `PATCH` accepts any subset of those fields. `DELETE` returns **204** with an empty body.
 - **Rate limits** (per client IP by default): register `5/minute`, login `10/minute`, refresh `30/minute` — override with `RATE_LIMIT_AUTH_*` in `.env`
 - **API Docs**: http://localhost:8000/docs
 - **Alternative Docs**: http://localhost:8000/redoc
@@ -239,7 +241,8 @@ make down
 │   ├── config.py            # Settings and configuration
 │   ├── api/                 # API layer (HTTP handlers, schemas)
 │   │   ├── common/          # Shared API types, `get_current_user`, error helpers
-│   │   └── users/           # Auth: register / login (JWT)
+│   │   ├── users/           # Auth: register / login (JWT)
+│   │   └── wedding_sites/   # Wedding sites HTTP API (owner CRUD)
 │   ├── db/                  # Database configuration
 │   │   ├── db.py            # Database engine and session
 │   │   └── migrations/      # Alembic migrations

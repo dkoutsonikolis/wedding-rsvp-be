@@ -11,6 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.common.schemas import ErrorResponse
 from api.users import auth_router, users_router
+from api.wedding_sites import wedding_sites_router
 from config import settings
 from db.db import engine, get_session
 from middleware.limiter import limiter
@@ -143,5 +144,6 @@ async def ready(session: AsyncSession = Depends(get_session)):
 api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(auth_router)
 api_v1.include_router(users_router)
+api_v1.include_router(wedding_sites_router)
 
 app.include_router(api_v1)
