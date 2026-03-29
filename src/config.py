@@ -39,5 +39,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_PUBLIC_AGENT_SESSION: str = "30/minute"
     RATE_LIMIT_PUBLIC_AGENT_TURN: str = "60/minute"
 
+    # Gemini via Generative Language API (same env name as Pydantic AI / google-genai).
+    GOOGLE_API_KEY: str | None = None
+
 
 settings = Settings()  # type: ignore[call-arg]
