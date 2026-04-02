@@ -1,6 +1,6 @@
 # Agent implementation plan
 
-This document tracks **product and engineering steps** for the wedding-site builder assistant. It complements `**docs/plan.md`** (phased product plan) and the code under `**src/domains/agent/**`.
+This document tracks **product and engineering steps** for the wedding-site builder assistant. It complements `**docs/plan.md`** (phased product plan), **`docs/agent-tools-plan.md`** (proposed PydanticAI tools for the default template), and the code under `**src/domains/agent/**`.
 
 **Current baseline:** each turn sends the user message plus current **`config`** to the LLM; the model returns a short reply and a **full updated `config`**, which the API persists (public trial session or owner site). Shared prompt and structured turn logic live in **`structured_agent_backend.py`** (`StructuredAgentBackend`); provider types and Gemini wiring live under **`providers/`** (`config.py`, `gemini.py`). The **`AgentBackend`** port is **`ports.py`**; the offline stub is **`stub_backend.py`**. Backend selection is configured at app startup.
 
