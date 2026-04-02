@@ -1,8 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from domains.agent.config_merge import merge_model_config_into_base
-from domains.agent.config_normalize import (
+from domains.agent.config_processing import (
     apply_hero_names_from_user_message_when_unchanged,
     normalize_misplaced_hero_couple_fields,
     strip_unknown_top_level_site_config_keys,
@@ -46,8 +45,9 @@ class AgentService:
         row = await self._anonymous_sessions.get_active_by_plaintext_token_for_update(session_token)
         self._anonymous_sessions.ensure_can_take_turn(row)
         merged: dict[str, Any] = {**row.config, **(config or {})}
-        reply, raw_config = await self._backend.run(message=message, config=merged)
-        new_config = merge_model_config_into_base(base=merged, model_config=raw_config)
+        turn = await self._backend.run(message=message, config=merged)
+        reply = turn.assistant_message
+        new_config = turn.config
         new_config = strip_unknown_top_level_site_config_keys(new_config)
         new_config = normalize_misplaced_hero_couple_fields(new_config)
         new_config = apply_hero_names_from_user_message_when_unchanged(merged, new_config, message)
@@ -57,8 +57,12 @@ class AgentService:
             site_id=None,
             user_message=message,
             merged_base=merged,
-            raw_model_config=raw_config,
+            raw_model_config=turn.model_config_patch
+            if turn.model_config_patch is not None
+            else new_config,
             final_config=new_config,
+            llm_usage=turn.llm_usage,
+            tools_used=turn.tools_used,
         )
         updated = await self._anonymous_sessions.finalize_turn(row, new_config)
         remaining = max(0, TRIAL_INTERACTION_LIMIT - updated.interaction_count)
@@ -77,8 +81,9 @@ class AgentService:
             owner_user_id=owner_user_id,
         )
         merged = {**site.config, **(config or {})}
-        reply, raw_config = await self._backend.run(message=message, config=merged)
-        new_config = merge_model_config_into_base(base=merged, model_config=raw_config)
+        turn = await self._backend.run(message=message, config=merged)
+        reply = turn.assistant_message
+        new_config = turn.config
         new_config = strip_unknown_top_level_site_config_keys(new_config)
         new_config = normalize_misplaced_hero_couple_fields(new_config)
         new_config = apply_hero_names_from_user_message_when_unchanged(merged, new_config, message)
@@ -88,8 +93,12 @@ class AgentService:
             site_id=site_id,
             user_message=message,
             merged_base=merged,
-            raw_model_config=raw_config,
+            raw_model_config=turn.model_config_patch
+            if turn.model_config_patch is not None
+            else new_config,
             final_config=new_config,
+            llm_usage=turn.llm_usage,
+            tools_used=turn.tools_used,
         )
         await self._wedding_sites.update_for_user(
             site_id=site_id,

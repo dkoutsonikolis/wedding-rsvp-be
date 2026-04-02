@@ -1,4 +1,4 @@
-from domains.agent.config_normalize import (
+from domains.agent.config_processing import (
     apply_hero_names_from_user_message_when_unchanged,
     normalize_misplaced_hero_couple_fields,
     strip_unknown_top_level_site_config_keys,

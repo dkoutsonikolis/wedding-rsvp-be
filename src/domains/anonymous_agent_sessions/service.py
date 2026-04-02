@@ -41,9 +41,13 @@ class AnonymousAgentSessionsService:
     async def get_active_by_plaintext_token(self, plaintext: str) -> AnonymousAgentSession:
         row = await self.repository.get_by_token_hash(hash_session_token(plaintext))
         if row is None:
-            raise AnonymousSessionNotFoundError("Invalid or unknown session")
+            raise AnonymousSessionNotFoundError(
+                "This chat session was not found. Start a new trial session and try again."
+            )
         if row.expires_at < utc_now():
-            raise AnonymousSessionExpiredError("Session expired")
+            raise AnonymousSessionExpiredError(
+                "This trial chat has expired. Start a new session to continue."
+            )
         return row
 
     async def get_active_by_plaintext_token_for_update(
@@ -52,9 +56,13 @@ class AnonymousAgentSessionsService:
         """Load session row with a row lock (caller's transaction) to serialize quota updates."""
         row = await self.repository.get_by_token_hash_for_update(hash_session_token(plaintext))
         if row is None:
-            raise AnonymousSessionNotFoundError("Invalid or unknown session")
+            raise AnonymousSessionNotFoundError(
+                "This chat session was not found. Start a new trial session and try again."
+            )
         if row.expires_at < utc_now():
-            raise AnonymousSessionExpiredError("Session expired")
+            raise AnonymousSessionExpiredError(
+                "This trial chat has expired. Start a new session to continue."
+            )
         return row
 
     def ensure_can_take_turn(self, row: AnonymousAgentSession) -> None:

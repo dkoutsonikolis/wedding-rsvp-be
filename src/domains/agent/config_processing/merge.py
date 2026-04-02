@@ -1,8 +1,8 @@
-"""Merge LLM `config` output into the authoritative snapshot (client ∪ server).
+"""Merge LLM ``config`` output into the authoritative snapshot (client ∪ server).
 
 The model may return partial or oddly shaped JSON. We always persist and return a
 full dict derived from the pre-turn merged base, with the model output applied as
-a deep merge; `blocks` are merged by block ``id`` (``data`` is deep-merged).
+a deep merge; ``blocks`` are merged by block ``id`` (``data`` is deep-merged).
 """
 
 from __future__ import annotations

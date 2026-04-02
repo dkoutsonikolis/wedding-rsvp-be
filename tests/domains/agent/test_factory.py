@@ -75,6 +75,7 @@ def test__build_agent_backend__groq_with_key():
     # Assert
     assert isinstance(backend, StructuredAgentBackend)
     assert backend._run_failed_log_message == "Groq agent run failed"
+    assert backend._agent.end_strategy == "exhaustive"
 
 
 def test__build_agent_backend__groq_without_key():

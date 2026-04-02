@@ -1,4 +1,4 @@
-from domains.agent.config_merge import merge_model_config_into_base
+from domains.agent.config_processing import merge_model_config_into_base
 
 
 def test__merge_model_config_into_base__merges_hero_data_by_block_id():

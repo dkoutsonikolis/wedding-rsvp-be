@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
@@ -50,6 +51,23 @@ def summarize_agent_config(name: str, config: Any) -> str:
     return f"{name} keys=[{keys}] blocks={blk}{hero_part}"
 
 
+def summarize_llm_usage(usage: dict[str, int] | None) -> str:
+    """One-line usage for INFO logs (compare runs / cost debugging)."""
+    if not usage:
+        return "llm_usage=n/a"
+    parts = [f"{k}={v}" for k, v in sorted(usage.items())]
+    return "llm_usage[" + ";".join(parts) + "]"
+
+
+def summarize_tools_used(names: Sequence[str] | None) -> str:
+    """One-line tool call sequence for INFO logs (observe model behavior per turn)."""
+    if names is None:
+        return "tools=n/a"
+    if not names:
+        return "tools=[]"
+    return "tools[" + ";".join(names) + "]"
+
+
 def debug_config_json(config: Any) -> str:
     try:
         text = json.dumps(config, ensure_ascii=False, default=str)
@@ -69,17 +87,21 @@ def log_agent_turn_config(
     merged_base: dict[str, Any],
     raw_model_config: Any,
     final_config: dict[str, Any],
+    llm_usage: dict[str, int] | None = None,
+    tools_used: Sequence[str] | None = None,
 ) -> None:
     msg_preview = user_message.strip().replace("\n", " ")[:200]
     site = f" site_id={site_id}" if site_id else ""
     logger.info(
-        "Agent turn scope=%s%s msg=%r | %s | %s | %s",
+        "Agent turn scope=%s%s msg=%r | %s | %s | %s | %s | %s",
         scope,
         site,
         msg_preview,
         summarize_agent_config("base", merged_base),
         summarize_agent_config("raw", raw_model_config),
         summarize_agent_config("final", final_config),
+        summarize_llm_usage(llm_usage),
+        summarize_tools_used(tools_used),
     )
     logger.debug(
         "Agent turn scope=%s%s raw_config JSON: %s",

@@ -1,4 +1,4 @@
-"""Repair common LLM mistakes in wedding `config` before persist/response.
+"""Repair common LLM mistakes in wedding ``config`` before persist/response.
 
 Models sometimes put couple names at the root of ``config`` instead of under the
 hero block's ``data``. They may also emit a bogus string ``data`` field at the

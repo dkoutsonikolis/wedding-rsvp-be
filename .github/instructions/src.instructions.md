@@ -36,6 +36,7 @@ applyTo: "src/**/*.py"
 - **One class per file** for model, repository, and service in a domain. Multiple small related functions in one module are OK (e.g. `password.py`, `jwt.py`).
 - **Enums:** Domain enums in `domains/<domain>/enums.py`, imported from models — not defined inline in `models.py`.
 - **Naming:** Domain folder names plural (`users`, `wedding_sites`). Classes: `UsersRepository`, `UsersService`, dependency `get_users_service`. Prefer **`routers.py`** when a domain exposes more than one router (e.g. `auth_router` + `users_router`).
+- **Variable names:** Do **not** use **single-letter** names for parameters, return-bound locals, or values carried across more than a line or two (e.g. `run_usage`, not `u`). **Exceptions:** idiomatic micro-scopes only—`i` / `j` / `k` in a short indexed loop, `e` in `except ... as e`, and `k` / `v` in `.items()` when the meaning is obvious from context.
 - **Endpoints:** One **route handler function** per file (`list.py`, `create.py`, …). Handler stays thin: validate input, call service, map to output schema.
 - **Routers:** Prefer **flat** inclusion in `main.py` under `api_v1` — avoid deep nesting of routers (reduces duplicate tags in OpenAPI). Use **`tags=[...]`** for how the API reads to clients (`auth`, `users`, `wedding-sites`, …), not for internal folder names.
 - **IDs:** API-exposed aggregate roots **SHOULD** use **`UUID`** + `default_factory=uuid4`. Internal/reference tables **MAY** use `int` PKs; never `id: int | None = Field(default=None, primary_key=True)` — PKs are required in the type system.
