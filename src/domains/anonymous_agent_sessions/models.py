@@ -16,6 +16,10 @@ class AnonymousAgentSession(SQLModel, table=True):
     token_hash: str = Field(unique=True, index=True, max_length=64)
     interaction_count: int = Field(default=0, ge=0)
     config: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSONB, nullable=False))
+    agent_chat_history: list[dict[str, Any]] = Field(
+        default_factory=list,
+        sa_column=Column(JSONB, nullable=False),
+    )
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
     expires_at: datetime

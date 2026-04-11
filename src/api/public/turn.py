@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, Request, status
 
-from api.agent.schemas import AgentTurnResponse, PublicAgentTurnRequest
+from api.agent.schemas import AgentTurnResponse, ChatHistoryItem, PublicAgentTurnRequest
 from config import settings
 from domains.agent.dependencies import get_agent_service
 from domains.agent.service import AgentService
@@ -19,7 +19,7 @@ async def public_agent_turn(
     agent: AgentService = Depends(get_agent_service),
 ) -> AgentTurnResponse:
     try:
-        reply, new_config, remaining = await agent.public_turn(
+        reply, new_config, remaining, chat_history = await agent.public_turn(
             session_token=body.session_token,
             message=body.message,
             config=body.config,
@@ -33,5 +33,6 @@ async def public_agent_turn(
     return AgentTurnResponse(
         message=reply,
         config=new_config,
+        chat_history=[ChatHistoryItem.model_validate(m) for m in chat_history],
         interactions_remaining=remaining,
     )

@@ -31,6 +31,7 @@ class AnonymousAgentSessionsService:
             token_hash=hash_session_token(plaintext),
             interaction_count=0,
             config={},
+            agent_chat_history=[],
             created_at=now,
             updated_at=now,
             expires_at=now + timedelta(days=ttl_days),

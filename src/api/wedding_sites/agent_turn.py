@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 
-from api.agent.schemas import AgentTurnRequest, AgentTurnResponse
+from api.agent.schemas import AgentTurnRequest, AgentTurnResponse, ChatHistoryItem
 from api.common.dependencies import get_current_user
 from domains.agent.dependencies import get_agent_service
 from domains.agent.service import AgentService
@@ -17,7 +17,7 @@ async def agent_turn_for_site(
     agent: AgentService = Depends(get_agent_service),
 ) -> AgentTurnResponse:
     try:
-        reply, new_config = await agent.turn(
+        reply, new_config, chat_history = await agent.turn(
             owner_user_id=user.id,
             site_id=site_id,
             message=body.message,
@@ -28,5 +28,6 @@ async def agent_turn_for_site(
     return AgentTurnResponse(
         message=reply,
         config=new_config,
+        chat_history=[ChatHistoryItem.model_validate(m) for m in chat_history],
         interactions_remaining=None,
     )

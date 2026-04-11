@@ -4,13 +4,13 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.exc import IntegrityError
 
-from domains.wedding_sites.enums import SiteStatus
+from domains.wedding_sites.enums import AgentMessageRole, SiteStatus
 from domains.wedding_sites.exceptions import (
     InvalidSlugError,
     SlugConflictError,
     WeddingSiteNotFoundError,
 )
-from domains.wedding_sites.models import WeddingSite
+from domains.wedding_sites.models import AgentConversationMessage, WeddingSite
 from domains.wedding_sites.repository import WeddingSitesRepository
 from utils import utc_now
 from utils.logging import get_logger
@@ -150,6 +150,40 @@ class WeddingSitesService:
         except IntegrityError as e:
             logger.warning("update wedding site failed integrity check: %s", e)
             raise SlugConflictError("Slug is already in use") from e
+
+    async def list_agent_conversation_messages_for_site(
+        self,
+        *,
+        site_id: UUID,
+        owner_user_id: UUID,
+        limit: int | None = None,
+    ) -> list[AgentConversationMessage]:
+        await self.get_by_id_for_user(site_id=site_id, owner_user_id=owner_user_id)
+        return await self.repository.list_agent_conversation_messages(
+            wedding_site_id=site_id,
+            limit=limit,
+        )
+
+    async def append_agent_chat_turn(
+        self,
+        *,
+        site_id: UUID,
+        owner_user_id: UUID,
+        user_message: str,
+        assistant_message: str,
+    ) -> None:
+        await self.get_by_id_for_user(site_id=site_id, owner_user_id=owner_user_id)
+        user_row = AgentConversationMessage(
+            wedding_site_id=site_id,
+            role=AgentMessageRole.USER,
+            content=user_message,
+        )
+        assistant_row = AgentConversationMessage(
+            wedding_site_id=site_id,
+            role=AgentMessageRole.ASSISTANT,
+            content=assistant_message,
+        )
+        await self.repository.add_agent_conversation_messages([user_row, assistant_row])
 
     async def delete_for_user(self, *, site_id: UUID, owner_user_id: UUID) -> None:
         site = await self.repository.get_by_id_for_user(

@@ -1,6 +1,14 @@
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
+from config import settings
+from domains.agent.chat_history import (
+    agent_conversation_rows_to_history,
+    append_turn,
+    normalize_history,
+    trim_for_model,
+    trim_to_max_turn_pairs,
+)
 from domains.agent.config_processing import (
     apply_hero_names_from_user_message_when_unchanged,
     normalize_misplaced_hero_couple_fields,
@@ -32,9 +40,14 @@ class AgentService:
 
     async def create_public_session(
         self,
-    ) -> tuple[str, dict[str, Any], int]:
+    ) -> tuple[str, dict[str, Any], int, list[dict[str, str]]]:
         token, row = await self._anonymous_sessions.create_session()
-        return token, dict(row.config), TRIAL_INTERACTION_LIMIT
+        return (
+            token,
+            dict(row.config),
+            TRIAL_INTERACTION_LIMIT,
+            normalize_history(row.agent_chat_history),
+        )
 
     async def public_turn(
         self,
@@ -42,11 +55,17 @@ class AgentService:
         session_token: str,
         message: str,
         config: dict[str, Any] | None,
-    ) -> tuple[str, dict[str, Any], int]:
+    ) -> tuple[str, dict[str, Any], int, list[dict[str, str]]]:
         row = await self._anonymous_sessions.get_active_by_plaintext_token_for_update(session_token)
         self._anonymous_sessions.ensure_can_take_turn(row)
         merged: dict[str, Any] = {**row.config, **(config or {})}
-        turn = await self._backend.run(message=message, config=merged)
+        prior = normalize_history(row.agent_chat_history)
+        history_for_model = trim_for_model(prior, settings.AGENT_MODEL_HISTORY_MAX_TURNS)
+        turn = await self._backend.run(
+            message=message,
+            config=merged,
+            conversation_history=history_for_model,
+        )
         reply = turn.assistant_message
         new_config = turn.config
         new_config = strip_unknown_top_level_site_config_keys(new_config)
@@ -66,9 +85,14 @@ class AgentService:
             llm_usage=turn.llm_usage,
             tools_used=turn.tools_used,
         )
+        row.agent_chat_history = cast(
+            list[dict[str, Any]],
+            trim_to_max_turn_pairs(append_turn(prior, message, reply), TRIAL_INTERACTION_LIMIT),
+        )
         updated = await self._anonymous_sessions.finalize_turn(row, new_config)
         remaining = max(0, TRIAL_INTERACTION_LIMIT - updated.interaction_count)
-        return reply, new_config, remaining
+        chat_history = normalize_history(updated.agent_chat_history)
+        return reply, new_config, remaining, chat_history
 
     async def turn(
         self,
@@ -77,13 +101,25 @@ class AgentService:
         site_id: UUID,
         message: str,
         config: dict[str, Any] | None,
-    ) -> tuple[str, dict[str, Any]]:
+    ) -> tuple[str, dict[str, Any], list[dict[str, str]]]:
         site = await self._wedding_sites.get_by_id_for_user(
             site_id=site_id,
             owner_user_id=owner_user_id,
         )
         merged = {**site.config, **(config or {})}
-        turn = await self._backend.run(message=message, config=merged)
+        max_msgs_for_prompt = settings.AGENT_MODEL_HISTORY_MAX_TURNS * 2
+        prior_rows = await self._wedding_sites.list_agent_conversation_messages_for_site(
+            site_id=site_id,
+            owner_user_id=owner_user_id,
+            limit=max_msgs_for_prompt,
+        )
+        prior = agent_conversation_rows_to_history(prior_rows)
+        history_for_model = trim_for_model(prior, settings.AGENT_MODEL_HISTORY_MAX_TURNS)
+        turn = await self._backend.run(
+            message=message,
+            config=merged,
+            conversation_history=history_for_model,
+        )
         reply = turn.assistant_message
         new_config = turn.config
         new_config = strip_unknown_top_level_site_config_keys(new_config)
@@ -108,4 +144,15 @@ class AgentService:
             owner_user_id=owner_user_id,
             updates={"config": new_config},
         )
-        return reply, new_config
+        await self._wedding_sites.append_agent_chat_turn(
+            site_id=site_id,
+            owner_user_id=owner_user_id,
+            user_message=message,
+            assistant_message=reply,
+        )
+        after_rows = await self._wedding_sites.list_agent_conversation_messages_for_site(
+            site_id=site_id,
+            owner_user_id=owner_user_id,
+        )
+        chat_history: list[dict[str, str]] = agent_conversation_rows_to_history(after_rows)
+        return reply, new_config, chat_history

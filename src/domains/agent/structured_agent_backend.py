@@ -2,6 +2,7 @@
 
 import copy
 import json
+from collections.abc import Sequence
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -12,6 +13,7 @@ from pydantic_ai.run import AgentRunResult
 from pydantic_ai.usage import RunUsage
 
 from domains.agent.agent_config_summary import summarize_wedding_site_config_for_agent
+from domains.agent.chat_history import format_history_for_prompt
 from domains.agent.config_processing import merge_model_config_into_base
 from domains.agent.ports import AgentBackend, AgentTurnResult
 from domains.agent.prompts import default_wedding_builder_system_prompt
@@ -105,7 +107,13 @@ class StructuredAgentBackend(AgentBackend):
         register_site_surface_tools(self._agent)
         self._run_failed_log_message = run_failed_log_message
 
-    def _build_user_prompt(self, *, message: str, config: dict[str, Any]) -> str:
+    def _build_user_prompt(
+        self,
+        *,
+        message: str,
+        config: dict[str, Any],
+        conversation_history: Sequence[dict[str, str]] | None = None,
+    ) -> str:
         text = message.strip()
         if len(text) > _MAX_USER_CHARS:
             text = text[:_MAX_USER_CHARS]
@@ -115,7 +123,10 @@ class StructuredAgentBackend(AgentBackend):
         except TypeError:
             logger.exception("Site config summary is not JSON-serializable for agent turn")
             raise
+        prev_block = format_history_for_prompt(conversation_history or ())
+        prefix = f"Previous conversation:\n{prev_block}\n\n" if prev_block else ""
         return (
+            f"{prefix}"
             f"User message:\n{text}\n\n"
             f"Site summary (compact — nested section data omitted; call get_full_site_config if you need it):\n"
             f"{summary_json}"
@@ -127,8 +138,18 @@ class StructuredAgentBackend(AgentBackend):
         result = await self._agent.run(user_prompt, deps=deps)
         return result.output, result.usage(), _tool_names_from_run(result)
 
-    async def run(self, *, message: str, config: dict[str, Any]) -> AgentTurnResult:
-        user_prompt = self._build_user_prompt(message=message, config=config)
+    async def run(
+        self,
+        *,
+        message: str,
+        config: dict[str, Any],
+        conversation_history: Sequence[dict[str, str]] | None = None,
+    ) -> AgentTurnResult:
+        user_prompt = self._build_user_prompt(
+            message=message,
+            config=config,
+            conversation_history=conversation_history,
+        )
         deps = WeddingBuilderDeps(config=copy.deepcopy(config))
         try:
             out, run_usage, tool_names = await self._invoke_agent(user_prompt, deps=deps)

@@ -1,11 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import delete
+from sqlalchemy import delete, desc
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from domains.wedding_sites.models import WeddingSite
+from domains.wedding_sites.models import AgentConversationMessage, WeddingSite
 
 
 class WeddingSitesRepository:
@@ -55,4 +55,37 @@ class WeddingSitesRepository:
 
     async def delete(self, site: WeddingSite) -> None:
         await self.session.exec(delete(WeddingSite).where(col(WeddingSite.id) == site.id))
+        await self.session.commit()
+
+    async def list_agent_conversation_messages(
+        self,
+        *,
+        wedding_site_id: UUID,
+        limit: int | None = None,
+    ) -> list[AgentConversationMessage]:
+        """List messages oldest-first. When ``limit`` is set, only the last ``limit`` rows (by time)."""
+        stmt = select(AgentConversationMessage).where(
+            AgentConversationMessage.wedding_site_id == wedding_site_id
+        )
+        if limit is not None:
+            stmt = stmt.order_by(
+                desc(col(AgentConversationMessage.created_at)),
+                desc(col(AgentConversationMessage.id)),
+            ).limit(limit)
+            result = await self.session.exec(stmt)
+            rows = list(result.all())
+            rows.reverse()
+            return rows
+        result = await self.session.exec(
+            stmt.order_by(
+                col(AgentConversationMessage.created_at), col(AgentConversationMessage.id)
+            )
+        )
+        return list(result.all())
+
+    async def add_agent_conversation_messages(
+        self, messages: list[AgentConversationMessage]
+    ) -> None:
+        for message in messages:
+            self.session.add(message)
         await self.session.commit()

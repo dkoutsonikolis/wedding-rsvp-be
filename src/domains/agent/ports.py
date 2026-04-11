@@ -1,5 +1,6 @@
 """Agent port: one turn in, assistant message + site ``config`` out."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -20,6 +21,16 @@ class AgentTurnResult:
 
 
 class AgentBackend(Protocol):
-    async def run(self, *, message: str, config: dict[str, Any]) -> AgentTurnResult:
-        """Return assistant text and the persisted site config for this turn."""
+    async def run(
+        self,
+        *,
+        message: str,
+        config: dict[str, Any],
+        conversation_history: Sequence[dict[str, str]] | None = None,
+    ) -> AgentTurnResult:
+        """Return assistant text and the persisted site config for this turn.
+
+        ``conversation_history`` is prior turns only (user/assistant pairs), oldest first,
+        already trimmed for the model context window when applicable.
+        """
         ...

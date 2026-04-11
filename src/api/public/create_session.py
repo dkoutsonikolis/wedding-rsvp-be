@@ -1,6 +1,6 @@
 from fastapi import Depends, Request
 
-from api.agent.schemas import PublicAgentSessionCreateResponse
+from api.agent.schemas import ChatHistoryItem, PublicAgentSessionCreateResponse
 from config import settings
 from domains.agent.dependencies import get_agent_service
 from domains.agent.service import AgentService
@@ -12,9 +12,10 @@ async def create_public_agent_session(
     request: Request,
     agent: AgentService = Depends(get_agent_service),
 ) -> PublicAgentSessionCreateResponse:
-    token, config, remaining = await agent.create_public_session()
+    token, config, remaining, chat_history = await agent.create_public_session()
     return PublicAgentSessionCreateResponse(
         session_token=token,
         interactions_remaining=remaining,
         config=config,
+        chat_history=[ChatHistoryItem.model_validate(m) for m in chat_history],
     )
