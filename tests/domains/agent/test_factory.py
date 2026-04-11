@@ -12,6 +12,8 @@ def _ns(**kwargs: object) -> SimpleNamespace:
         "AGENT_BACKEND": "auto",
         "GOOGLE_API_KEY": None,
         "GEMINI_MODEL": "gemini-2.5-flash",
+        "ANTHROPIC_API_KEY": None,
+        "ANTHROPIC_MODEL": "claude-sonnet-4-20250514",
         "GROQ_API_KEY": None,
         "GROQ_MODEL": "llama-3.3-70b-versatile",
     }
@@ -57,6 +59,20 @@ def test__build_agent_backend__auto_with_groq_key_only():
     assert backend._run_failed_log_message == "Groq agent run failed"
 
 
+def test__build_agent_backend__auto_with_anthropic_key_only():
+    # Arrange
+    cfg = _ns(
+        AGENT_BACKEND="auto",
+        GOOGLE_API_KEY=None,
+        ANTHROPIC_API_KEY="anthropic-key",
+    )
+    # Act
+    backend = build_agent_backend(cfg)
+    # Assert
+    assert isinstance(backend, StructuredAgentBackend)
+    assert backend._run_failed_log_message == "Anthropic agent run failed"
+
+
 def test__build_agent_backend__auto_prefers_gemini_when_both_keys_set():
     # Arrange
     cfg = _ns(AGENT_BACKEND="auto", GOOGLE_API_KEY="google-key", GROQ_API_KEY="groq-key")
@@ -65,6 +81,21 @@ def test__build_agent_backend__auto_prefers_gemini_when_both_keys_set():
     # Assert
     assert isinstance(backend, StructuredAgentBackend)
     assert backend._run_failed_log_message == "Gemini agent run failed"
+
+
+def test__build_agent_backend__auto_prefers_anthropic_over_groq():
+    # Arrange
+    cfg = _ns(
+        AGENT_BACKEND="auto",
+        GOOGLE_API_KEY=None,
+        ANTHROPIC_API_KEY="anthropic-key",
+        GROQ_API_KEY="groq-key",
+    )
+    # Act
+    backend = build_agent_backend(cfg)
+    # Assert
+    assert isinstance(backend, StructuredAgentBackend)
+    assert backend._run_failed_log_message == "Anthropic agent run failed"
 
 
 def test__build_agent_backend__groq_with_key():
@@ -91,6 +122,24 @@ def test__build_agent_backend__gemini_without_key():
     cfg = _ns(AGENT_BACKEND="gemini", GOOGLE_API_KEY="")
     # Act / Assert
     with pytest.raises(RuntimeError, match="GOOGLE_API_KEY"):
+        build_agent_backend(cfg)
+
+
+def test__build_agent_backend__anthropic_with_key():
+    # Arrange
+    cfg = _ns(AGENT_BACKEND="anthropic", ANTHROPIC_API_KEY="anthropic-key")
+    # Act
+    backend = build_agent_backend(cfg)
+    # Assert
+    assert isinstance(backend, StructuredAgentBackend)
+    assert backend._run_failed_log_message == "Anthropic agent run failed"
+
+
+def test__build_agent_backend__anthropic_without_key():
+    # Arrange
+    cfg = _ns(AGENT_BACKEND="anthropic", ANTHROPIC_API_KEY="")
+    # Act / Assert
+    with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
         build_agent_backend(cfg)
 
 

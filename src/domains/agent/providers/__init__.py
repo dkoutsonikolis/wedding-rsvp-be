@@ -1,5 +1,9 @@
-"""LLM provider configs and factories (Gemini, Groq, …)."""
+"""LLM provider configs and factories (Gemini, Groq, Anthropic, …)."""
 
+from domains.agent.providers.anthropic import (
+    AnthropicBackendConfig,
+    structured_agent_backend_from_anthropic,
+)
 from domains.agent.providers.config import ProviderLlmConfig
 from domains.agent.providers.gemini import (
     GeminiBackendConfig,
@@ -16,4 +20,6 @@ __all__ = [
     "structured_agent_backend_from_gemini",
     "GroqBackendConfig",
     "structured_agent_backend_from_groq",
+    "AnthropicBackendConfig",
+    "structured_agent_backend_from_anthropic",
 ]
