@@ -44,3 +44,19 @@ def mutate_apply_theme(config: dict[str, Any], theme_id: str) -> str:
         raise ValueError(f"Unknown theme_id {theme_id!r}. Valid ids: {valid}")
     config["theme"] = copy.deepcopy(theme)
     return f"Applied theme {theme_id!r}."
+
+
+def mutate_revert_stylistic_defaults(config: dict[str, Any]) -> str:
+    """
+    Reset global look-and-feel only. Blocks (order, visibility, ``data``) are left unchanged.
+
+    - Theme → default starter (``classic-elegant``, same as the frontend default).
+    - Removes ``customCss`` when present.
+    """
+    config["theme"] = copy.deepcopy(CURATED_THEME["classic-elegant"])
+    config.pop("customCss", None)
+
+    return (
+        "Reverted colors and theme to the default starter look; removed custom CSS if any. "
+        "Section order, which sections are shown, and your wording and details are unchanged."
+    )

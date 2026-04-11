@@ -1,6 +1,7 @@
 from domains.agent.config_processing import (
     apply_hero_names_from_user_message_when_unchanged,
     normalize_misplaced_hero_couple_fields,
+    normalize_theme_color_field_aliases,
     strip_unknown_top_level_site_config_keys,
 )
 
@@ -119,6 +120,23 @@ def test__apply_hero_names_from_message__skips_when_model_changed_hero():
     out = apply_hero_names_from_user_message_when_unchanged(base, final, msg)
     # Assert
     assert out["blocks"][0]["data"]["partnerOne"] == "Anna"
+
+
+def test__normalize_theme_aliases__moves_background_color_into_colors():
+    # Arrange
+    cfg = {
+        "theme": {
+            "id": "classic-elegant",
+            "colors": {"background": "#FFFEF9", "primary": "#B8860B"},
+            "background_color": "#4A90E2",
+        },
+    }
+    # Act
+    out = normalize_theme_color_field_aliases(cfg)
+    # Assert
+    assert "background_color" not in out["theme"]
+    assert out["theme"]["colors"]["background"] == "#4A90E2"
+    assert out["theme"]["colors"]["primary"] == "#B8860B"
 
 
 def test__apply_hero_names_from_message__skips_without_name_intent():

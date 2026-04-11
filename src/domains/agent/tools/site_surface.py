@@ -3,6 +3,7 @@
 
 - **Layout** — block order
 - **Theme** — curated global theme
+- **Stylistic revert** — reset theme (and related presentation) without changing sections or copy
 - **Context** — read-only full JSON (nested ``data``), so the model can patch content afterward
 
 Deeper, block-specific tools (hero copy, gallery CRUD, …) stay separate when added.
@@ -16,7 +17,11 @@ from pydantic import Field
 from pydantic_ai import RunContext
 
 from domains.agent.theme_registry import CuratedThemeId
-from domains.agent.tools.mutations.site_surface import mutate_apply_theme, mutate_reorder_blocks
+from domains.agent.tools.mutations.site_surface import (
+    mutate_apply_theme,
+    mutate_reorder_blocks,
+    mutate_revert_stylistic_defaults,
+)
 from domains.agent.wedding_builder_deps import WeddingBuilderDeps
 from utils.logging import get_logger
 
@@ -37,6 +42,15 @@ def apply_theme(ctx: RunContext[WeddingBuilderDeps], theme_id: CuratedThemeId) -
     """Apply a curated theme by id (classic-elegant or garden-romance — full theme object is set server-side)."""
     logger.info("Builder tool apply_theme theme_id=%r", theme_id)
     return mutate_apply_theme(ctx.deps.config, theme_id)
+
+
+def revert_stylistic_defaults(ctx: RunContext[WeddingBuilderDeps]) -> str:
+    """
+    Undo global look-and-feel (default starter theme, strip custom CSS). Does **not** change section
+    order, which sections are hidden, or block content (names, photos, addresses, party list, RSVP wording).
+    """
+    logger.info("Builder tool revert_stylistic_defaults")
+    return mutate_revert_stylistic_defaults(ctx.deps.config)
 
 
 def get_full_site_config(
@@ -72,6 +86,7 @@ def register_site_surface_tools(agent: object) -> None:
     for fn in (
         reorder_blocks,
         apply_theme,
+        revert_stylistic_defaults,
         get_full_site_config,
     ):
         agent.tool(fn)  # type: ignore[attr-defined]

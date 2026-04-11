@@ -4,6 +4,7 @@ from uuid import UUID
 from domains.agent.config_processing import (
     apply_hero_names_from_user_message_when_unchanged,
     normalize_misplaced_hero_couple_fields,
+    normalize_theme_color_field_aliases,
     strip_unknown_top_level_site_config_keys,
 )
 from domains.agent.ports import AgentBackend
@@ -50,6 +51,7 @@ class AgentService:
         new_config = turn.config
         new_config = strip_unknown_top_level_site_config_keys(new_config)
         new_config = normalize_misplaced_hero_couple_fields(new_config)
+        new_config = normalize_theme_color_field_aliases(new_config)
         new_config = apply_hero_names_from_user_message_when_unchanged(merged, new_config, message)
         log_agent_turn_config(
             logger,
@@ -86,6 +88,7 @@ class AgentService:
         new_config = turn.config
         new_config = strip_unknown_top_level_site_config_keys(new_config)
         new_config = normalize_misplaced_hero_couple_fields(new_config)
+        new_config = normalize_theme_color_field_aliases(new_config)
         new_config = apply_hero_names_from_user_message_when_unchanged(merged, new_config, message)
         log_agent_turn_config(
             logger,

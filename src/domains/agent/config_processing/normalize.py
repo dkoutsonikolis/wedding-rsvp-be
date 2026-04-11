@@ -4,6 +4,9 @@ Models sometimes put couple names at the root of ``config`` instead of under the
 hero block's ``data``. They may also emit a bogus string ``data`` field at the
 root, or random top-level keys (e.g. inverted key/value pairs). The builder UI
 only reads names from ``blocks[].data`` for the hero block.
+
+They sometimes put page colors on ``theme.background_color`` instead of
+``theme.colors.background`` (the shape the frontend uses).
 """
 
 from __future__ import annotations
@@ -25,6 +28,16 @@ _NAME_INTENT = re.compile(
 _TWO_NAMES = re.compile(
     r"\b([A-Za-z][A-Za-z']*)\s+and\s+([A-Za-z][A-Za-z']*)\b",
 )
+
+# LLM → ``WeddingTheme.colors`` (see v0-wedding-rsvp-website ``ThemeColors``).
+_THEME_ROOT_COLOR_ALIASES: dict[str, str] = {
+    "background_color": "background",
+    "backgroundColor": "background",
+    "page_background": "background",
+    "pageBackground": "background",
+    "primary_color": "primary",
+    "primaryColor": "primary",
+}
 
 
 def strip_unknown_top_level_site_config_keys(config: dict[str, Any]) -> dict[str, Any]:
@@ -133,4 +146,29 @@ def normalize_misplaced_hero_couple_fields(config: dict[str, Any]) -> dict[str, 
         return out
 
     out.update(moved)
+    return out
+
+
+def normalize_theme_color_field_aliases(config: dict[str, Any]) -> dict[str, Any]:
+    """
+    Move mistaken root-level theme color keys (e.g. ``background_color``) into
+    ``theme.colors`` so the preview matches the curated ``WeddingTheme`` shape.
+    """
+    out = copy.deepcopy(config)
+    theme = out.get("theme")
+    if not isinstance(theme, dict):
+        return out
+
+    existing = theme.get("colors")
+    if not isinstance(existing, dict):
+        theme["colors"] = {}
+    colors = theme["colors"]
+
+    for alias, color_key in _THEME_ROOT_COLOR_ALIASES.items():
+        if alias not in theme:
+            continue
+        raw = theme.pop(alias, None)
+        if isinstance(raw, str) and raw.strip():
+            colors[color_key] = raw.strip()
+
     return out

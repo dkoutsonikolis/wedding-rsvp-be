@@ -5,6 +5,7 @@ from domains.agent.tools.site_surface import (
     get_full_site_config,
     register_site_surface_tools,
     reorder_blocks,
+    revert_stylistic_defaults,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "get_full_site_config",
     "register_site_surface_tools",
     "reorder_blocks",
+    "revert_stylistic_defaults",
 ]
