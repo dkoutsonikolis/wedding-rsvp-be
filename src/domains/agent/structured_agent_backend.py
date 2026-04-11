@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.messages import BuiltinToolCallPart, ModelResponse, ToolCallPart
-from pydantic_ai.models import Model
+from pydantic_ai.models import Model, ModelSettings
 from pydantic_ai.run import AgentRunResult
 from pydantic_ai.usage import RunUsage
 
@@ -89,11 +89,13 @@ class StructuredAgentBackend(AgentBackend):
         system_prompt: str = DEFAULT_WEDDING_AGENT_SYSTEM_PROMPT,
         retries: int = 2,
         run_failed_log_message: str = "Agent run failed",
+        model_settings: ModelSettings | None = None,
     ) -> None:
         self._agent = Agent(
             model,
             output_type=_TurnOutput,
             system_prompt=system_prompt,
+            model_settings=model_settings,
             retries=retries,
             deps_type=WeddingBuilderDeps,
             # Default "early" runs the output tool first and skips other tool calls in the same model

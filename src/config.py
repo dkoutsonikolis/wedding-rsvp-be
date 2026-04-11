@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     # Anthropic Claude — https://console.anthropic.com/
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
+    # Prompt caching (system instructions + tool definitions; see Anthropic / Pydantic AI docs).
+    ANTHROPIC_PROMPT_CACHE: bool = True
+    ANTHROPIC_PROMPT_CACHE_TTL: Literal["5m", "1h"] = "1h"
 
     # Groq Cloud API — https://console.groq.com/keys
     GROQ_API_KEY: str | None = None

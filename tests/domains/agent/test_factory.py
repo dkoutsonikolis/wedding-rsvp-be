@@ -14,6 +14,8 @@ def _ns(**kwargs: object) -> SimpleNamespace:
         "GEMINI_MODEL": "gemini-2.5-flash",
         "ANTHROPIC_API_KEY": None,
         "ANTHROPIC_MODEL": "claude-sonnet-4-20250514",
+        "ANTHROPIC_PROMPT_CACHE": True,
+        "ANTHROPIC_PROMPT_CACHE_TTL": "1h",
         "GROQ_API_KEY": None,
         "GROQ_MODEL": "llama-3.3-70b-versatile",
     }
@@ -133,6 +135,23 @@ def test__build_agent_backend__anthropic_with_key():
     # Assert
     assert isinstance(backend, StructuredAgentBackend)
     assert backend._run_failed_log_message == "Anthropic agent run failed"
+    ms = backend._agent.model_settings
+    assert ms is not None
+    assert ms["anthropic_cache_instructions"] == "1h"
+    assert ms["anthropic_cache_tool_definitions"] == "1h"
+
+
+def test__build_agent_backend__anthropic_prompt_cache_disabled():
+    # Arrange
+    cfg = _ns(
+        AGENT_BACKEND="anthropic",
+        ANTHROPIC_API_KEY="anthropic-key",
+        ANTHROPIC_PROMPT_CACHE=False,
+    )
+    # Act
+    backend = build_agent_backend(cfg)
+    # Assert
+    assert backend._agent.model_settings is None
 
 
 def test__build_agent_backend__anthropic_without_key():

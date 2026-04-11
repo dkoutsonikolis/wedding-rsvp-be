@@ -26,6 +26,8 @@ class AgentBackendConfig(Protocol):
     GEMINI_MODEL: str
     ANTHROPIC_API_KEY: str | None
     ANTHROPIC_MODEL: str
+    ANTHROPIC_PROMPT_CACHE: bool
+    ANTHROPIC_PROMPT_CACHE_TTL: Literal["5m", "1h"]
     GROQ_API_KEY: str | None
     GROQ_MODEL: str
 
@@ -50,7 +52,7 @@ class _ProviderSpec:
 
     api_key_attr: str
     model_attr: str
-    build: Callable[[str, str], AgentBackend]
+    build: Callable[[AgentBackendConfig, str, str], AgentBackend]
 
 
 def _require_model_id(settings: AgentBackendConfig, spec: _ProviderSpec) -> str:
@@ -66,28 +68,33 @@ def _build_from_spec(
     settings: AgentBackendConfig, spec: _ProviderSpec, api_key: str
 ) -> AgentBackend:
     model = _require_model_id(settings, spec)
-    return spec.build(api_key, model)
+    return spec.build(settings, api_key, model)
 
 
 _PROVIDER_SPECS: dict[str, _ProviderSpec] = {
     "gemini": _ProviderSpec(
         api_key_attr="GOOGLE_API_KEY",
         model_attr="GEMINI_MODEL",
-        build=lambda api_key, model: structured_agent_backend_from_gemini(
+        build=lambda _settings, api_key, model: structured_agent_backend_from_gemini(
             GeminiBackendConfig(api_key=api_key, model_name=model)
         ),
     ),
     "anthropic": _ProviderSpec(
         api_key_attr="ANTHROPIC_API_KEY",
         model_attr="ANTHROPIC_MODEL",
-        build=lambda api_key, model: structured_agent_backend_from_anthropic(
-            AnthropicBackendConfig(api_key=api_key, model_name=model)
+        build=lambda settings, api_key, model: structured_agent_backend_from_anthropic(
+            AnthropicBackendConfig(
+                api_key=api_key,
+                model_name=model,
+                prompt_cache=settings.ANTHROPIC_PROMPT_CACHE,
+                prompt_cache_ttl=settings.ANTHROPIC_PROMPT_CACHE_TTL,
+            )
         ),
     ),
     "groq": _ProviderSpec(
         api_key_attr="GROQ_API_KEY",
         model_attr="GROQ_MODEL",
-        build=lambda api_key, model: structured_agent_backend_from_groq(
+        build=lambda _settings, api_key, model: structured_agent_backend_from_groq(
             GroqBackendConfig(api_key=api_key, model_name=model)
         ),
     ),
