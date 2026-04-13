@@ -1,5 +1,6 @@
 import pytest
 
+from domains.anonymous_agent_sessions.exceptions import AnonymousSessionExpiredError
 from domains.users.exceptions import InvalidCredentialsError, UserAlreadyExistsError
 from domains.users.jwt import create_access_token, create_refresh_token
 from domains.users.service import UsersService
@@ -38,6 +39,27 @@ async def test__register__case_normalized_duplicate(users_service: UsersService)
         await users_service.register(email="first@example.com", password="password123")
     # Assert
     assert "first@example.com" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test__register__with_anonymous_session_token(users_service: UsersService):
+    # Arrange
+    session_token, session_row = await users_service._anonymous_sessions_service.create_session()
+    session_row.config = {"hero": {"title": "Copied Draft"}, "schedule": {"enabled": True}}
+    await users_service._anonymous_sessions_service.repository.save(session_row)
+    # Act
+    user = await users_service.register(
+        email="anon-import@example.com",
+        password="password123",
+        anonymous_session_token=session_token,
+    )
+    sites = await users_service._wedding_sites_service.list_for_user(user.id)
+    # Assert
+    assert len(sites) == 1
+    assert sites[0].config["hero"]["title"] == "Copied Draft"
+    assert sites[0].config["schedule"]["enabled"] is True
+    with pytest.raises(AnonymousSessionExpiredError):
+        await users_service._anonymous_sessions_service.get_active_by_plaintext_token(session_token)
 
 
 @pytest.mark.asyncio

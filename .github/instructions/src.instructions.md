@@ -47,6 +47,7 @@ applyTo: "src/**/*.py"
 
 - Domain logic or `session.exec(...)` inside **`api/`** route functions.
 - **`print()`** for diagnostics.
+- Keyword-only separator `*` in function/method signatures.
 - Docstrings that only restate the function name. Args/Returns blocks when types already explain the contract.
 - Comments that narrate **what** the next line does (obvious from code).
 - URL paths that mirror **only** internal folder names without reflecting a resource (e.g. stutter segments like `/items/items`).

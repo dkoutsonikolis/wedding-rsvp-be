@@ -6,6 +6,11 @@ from pydantic import BaseModel, EmailStr, Field
 class UserRegister(BaseModel):
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(..., min_length=8, description="User password")
+    anonymous_session_token: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Anonymous trial session token used to import draft site state",
+    )
 
 
 class UserPublic(BaseModel):

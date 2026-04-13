@@ -65,6 +65,11 @@ class WeddingSitesService:
             suffix += 1
         return candidate
 
+    def _agent_conversation_rows_to_history(
+        self, rows: list[AgentConversationMessage]
+    ) -> list[dict[str, str]]:
+        return [{"role": str(row.role), "content": row.content} for row in rows]
+
     async def list_for_user(self, owner_user_id: UUID) -> list[WeddingSite]:
         return await self.repository.list_for_user(owner_user_id)
 
@@ -163,6 +168,23 @@ class WeddingSitesService:
             wedding_site_id=site_id,
             limit=limit,
         )
+
+    async def list_agent_chat_history_for_site(
+        self,
+        *,
+        site_id: UUID,
+        owner_user_id: UUID,
+        max_turns: int | None = None,
+    ) -> list[dict[str, str]]:
+        if max_turns is not None and max_turns < 0:
+            raise ValueError("max_turns cannot be negative")
+        message_limit = None if max_turns is None else max_turns * 2
+        rows = await self.list_agent_conversation_messages_for_site(
+            site_id=site_id,
+            owner_user_id=owner_user_id,
+            limit=message_limit,
+        )
+        return self._agent_conversation_rows_to_history(rows)
 
     async def append_agent_chat_turn(
         self,

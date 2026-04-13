@@ -15,7 +15,11 @@ async def register_user(
     service: UsersService = Depends(get_users_service),
 ) -> UserPublic:
     try:
-        user = await service.register(email=body.email, password=body.password)
+        user = await service.register(
+            email=body.email,
+            password=body.password,
+            anonymous_session_token=body.anonymous_session_token,
+        )
     except UserAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
     return UserPublic.model_validate(user)

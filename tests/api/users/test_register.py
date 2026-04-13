@@ -37,3 +37,72 @@ async def test__register__password_below_min_length(client: AsyncClient):
     response = await client.post("/api/v1/auth/register", json=payload)
     # Assert
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test__register__with_anonymous_session_token(client: AsyncClient):
+    # Arrange
+    session_response = await client.post("/api/v1/public/agent/sessions")
+    session_token = session_response.json()["session_token"]
+    draft_turn = await client.post(
+        "/api/v1/public/agent/turn",
+        json={
+            "session_token": session_token,
+            "message": "Build my site",
+            "config": {"hero": {"title": "Nina and Theo"}, "schedule": {"enabled": True}},
+        },
+    )
+    assert draft_turn.status_code == 200
+    register_payload = {
+        "email": "imported-draft@example.com",
+        "password": "password123",
+        "anonymous_session_token": session_token,
+    }
+    # Act
+    register_response = await client.post("/api/v1/auth/register", json=register_payload)
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": register_payload["email"], "password": register_payload["password"]},
+    )
+    access_token = login_response.json()["access_token"]
+    sites_response = await client.get(
+        "/api/v1/wedding-sites",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    expired_public_trial_turn = await client.post(
+        "/api/v1/public/agent/turn",
+        json={"session_token": session_token, "message": "Can I keep using this token?"},
+    )
+    # Assert
+    assert register_response.status_code == 201
+    assert login_response.status_code == 200
+    assert sites_response.status_code == 200
+    assert expired_public_trial_turn.status_code == 401
+    sites = sites_response.json()
+    assert len(sites) == 1
+
+
+@pytest.mark.asyncio
+async def test__register__with_invalid_anonymous_session_token(client: AsyncClient):
+    # Arrange
+    register_payload = {
+        "email": "invalid-anon-session@example.com",
+        "password": "password123",
+        "anonymous_session_token": "not-a-real-token",
+    }
+    # Act
+    register_response = await client.post("/api/v1/auth/register", json=register_payload)
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"email": register_payload["email"], "password": register_payload["password"]},
+    )
+    access_token = login_response.json()["access_token"]
+    sites_response = await client.get(
+        "/api/v1/wedding-sites",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    # Assert
+    assert register_response.status_code == 201
+    assert login_response.status_code == 200
+    assert sites_response.status_code == 200
+    assert sites_response.json() == []

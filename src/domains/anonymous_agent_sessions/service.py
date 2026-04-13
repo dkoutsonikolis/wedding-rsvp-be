@@ -80,3 +80,8 @@ class AnonymousAgentSessionsService:
         row.interaction_count = row.interaction_count + 1
         row.updated_at = utc_now()
         return await self.repository.save(row)
+
+    async def expire_session(self, row: AnonymousAgentSession) -> AnonymousAgentSession:
+        row.expires_at = utc_now()
+        row.updated_at = utc_now()
+        return await self.repository.save(row)

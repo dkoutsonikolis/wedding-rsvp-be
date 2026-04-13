@@ -3,9 +3,6 @@ from uuid import UUID
 
 from config import settings
 from domains.agent.chat_history import (
-    agent_conversation_rows_to_history,
-    append_turn,
-    normalize_history,
     trim_for_model,
     trim_to_max_turn_pairs,
 )
@@ -22,6 +19,7 @@ from domains.anonymous_agent_sessions.service import (
     AnonymousAgentSessionsService,
 )
 from domains.wedding_sites.service import WeddingSitesService
+from utils.chat_history import append_turn, normalize_history
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -107,13 +105,11 @@ class AgentService:
             owner_user_id=owner_user_id,
         )
         merged = {**site.config, **(config or {})}
-        max_msgs_for_prompt = settings.AGENT_MODEL_HISTORY_MAX_TURNS * 2
-        prior_rows = await self._wedding_sites.list_agent_conversation_messages_for_site(
+        prior = await self._wedding_sites.list_agent_chat_history_for_site(
             site_id=site_id,
             owner_user_id=owner_user_id,
-            limit=max_msgs_for_prompt,
+            max_turns=settings.AGENT_MODEL_HISTORY_MAX_TURNS,
         )
-        prior = agent_conversation_rows_to_history(prior_rows)
         history_for_model = trim_for_model(prior, settings.AGENT_MODEL_HISTORY_MAX_TURNS)
         turn = await self._backend.run(
             message=message,
@@ -150,9 +146,8 @@ class AgentService:
             user_message=message,
             assistant_message=reply,
         )
-        after_rows = await self._wedding_sites.list_agent_conversation_messages_for_site(
+        chat_history = await self._wedding_sites.list_agent_chat_history_for_site(
             site_id=site_id,
             owner_user_id=owner_user_id,
         )
-        chat_history: list[dict[str, str]] = agent_conversation_rows_to_history(after_rows)
         return reply, new_config, chat_history

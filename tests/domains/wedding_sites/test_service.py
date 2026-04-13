@@ -224,3 +224,132 @@ async def test__create__stores_config_and_status(
     assert site.status == SiteStatus.PUBLISHED
     assert site.config == payload
     assert site.schema_version == 2
+
+
+@pytest.mark.asyncio
+async def test__list_agent_chat_history_for_site__returns_ordered_history_and_limit_slice(
+    wedding_sites_service: WeddingSitesService, site_owner_user_id, wedding_site_factory
+):
+    # Arrange
+    site = await wedding_site_factory(slug="history-site")
+    await wedding_sites_service.append_agent_chat_turn(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        user_message="first user",
+        assistant_message="first assistant",
+    )
+    await wedding_sites_service.append_agent_chat_turn(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        user_message="second user",
+        assistant_message="second assistant",
+    )
+    # Act
+    full_history = await wedding_sites_service.list_agent_chat_history_for_site(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+    )
+    limited_history = await wedding_sites_service.list_agent_chat_history_for_site(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        max_turns=1,
+    )
+    # Assert
+    assert full_history == [
+        {"role": "user", "content": "first user"},
+        {"role": "assistant", "content": "first assistant"},
+        {"role": "user", "content": "second user"},
+        {"role": "assistant", "content": "second assistant"},
+    ]
+    assert limited_history == [
+        {"role": "user", "content": "second user"},
+        {"role": "assistant", "content": "second assistant"},
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("max_turns", "expected_history", "expected_error"),
+    [
+        (
+            0,
+            [],
+            None,
+        ),
+        (
+            2,
+            [
+                {"role": "user", "content": "u2"},
+                {"role": "assistant", "content": "a2"},
+                {"role": "user", "content": "u3"},
+                {"role": "assistant", "content": "a3"},
+            ],
+            None,
+        ),
+        (
+            -1,
+            None,
+            ValueError,
+        ),
+    ],
+)
+async def test__list_agent_chat_history_for_site__max_turns_values(
+    wedding_sites_service: WeddingSitesService,
+    site_owner_user_id,
+    wedding_site_factory,
+    max_turns: int,
+    expected_history: list[dict[str, str]] | None,
+    expected_error: type[Exception] | None,
+):
+    # Arrange
+    slug_suffix = str(max_turns) if max_turns >= 0 else f"neg{-max_turns}"
+    site = await wedding_site_factory(slug=f"history-max-turns-{slug_suffix}")
+    await wedding_sites_service.append_agent_chat_turn(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        user_message="u1",
+        assistant_message="a1",
+    )
+    await wedding_sites_service.append_agent_chat_turn(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        user_message="u2",
+        assistant_message="a2",
+    )
+    await wedding_sites_service.append_agent_chat_turn(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        user_message="u3",
+        assistant_message="a3",
+    )
+    # Act
+    if expected_error is not None:
+        with pytest.raises(expected_error):
+            await wedding_sites_service.list_agent_chat_history_for_site(
+                site_id=site.id,
+                owner_user_id=site_owner_user_id,
+                max_turns=max_turns,
+            )
+        return
+    history = await wedding_sites_service.list_agent_chat_history_for_site(
+        site_id=site.id,
+        owner_user_id=site_owner_user_id,
+        max_turns=max_turns,
+    )
+    # Assert
+    assert history == expected_history
+
+
+@pytest.mark.asyncio
+async def test__list_agent_chat_history_for_site__missing_site(
+    wedding_sites_service: WeddingSitesService, site_owner_user_id
+):
+    # Arrange
+    missing_id = uuid4()
+    # Act
+    with pytest.raises(WeddingSiteNotFoundError):
+        await wedding_sites_service.list_agent_chat_history_for_site(
+            site_id=missing_id,
+            owner_user_id=site_owner_user_id,
+        )
+    # Assert
