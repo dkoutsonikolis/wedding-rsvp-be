@@ -103,7 +103,7 @@ Keep the existing behavior and paths (already under `/api/v1`); confirm in CI an
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/v1/auth/register` | Body: email, password (min length per existing validation). Response: `{ id, email }` (or as implemented—align with `UserPublic` / existing schemas). |
+| `POST` | `/api/v1/auth/register` | Body: email, password (min length per existing validation). Returns `access_token`, `refresh_token`, `expires_in`, `refresh_expires_in`, and `user`. |
 | `POST` | `/api/v1/auth/login` | Returns `access_token`, `refresh_token`, `expires_in`, `refresh_expires_in`, `user`. |
 | `POST` | `/api/v1/auth/refresh` | Body: `refresh_token`; returns new token pair. |
 | `GET`  | `/api/v1/user` | `Authorization: Bearer <access_token>`; current user profile. |

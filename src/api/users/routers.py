@@ -16,7 +16,7 @@ auth_router.add_api_route(
     "/register",
     register_user,
     methods=["POST"],
-    response_model=UserPublic,
+    response_model=LoginResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_409_CONFLICT: get_error_response(
@@ -31,7 +31,7 @@ auth_router.add_api_route(
             "Too many requests",
         ),
     },
-    summary="Register a new user",
+    summary="Register a new user and receive access and refresh tokens",
 )
 
 auth_router.add_api_route(

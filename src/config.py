@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     # auto = Gemini if GOOGLE_API_KEY, else Anthropic if ANTHROPIC_API_KEY, else Groq if GROQ_API_KEY, else stub.
     AGENT_BACKEND: Literal["auto", "stub", "gemini", "groq", "anthropic"] = "auto"
     # Max completed user+assistant turns from chat history included in the model prompt (owner sites may store more).
-    AGENT_MODEL_HISTORY_MAX_TURNS: int = 30
+    AGENT_MODEL_HISTORY_MAX_TURNS: int = 5
 
     # Gemini via Generative Language API (same env name as Pydantic AI / google-genai).
     GOOGLE_API_KEY: str | None = None
