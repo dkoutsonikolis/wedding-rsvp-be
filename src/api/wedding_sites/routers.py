@@ -6,12 +6,13 @@ from api.agent.schemas import AgentTurnResponse
 from api.common import get_error_response
 
 from .agent_turn import agent_turn_for_site
+from .chat_history import get_wedding_site_chat_history
 from .create import create_wedding_site
 from .delete import delete_wedding_site
 from .get_one import get_wedding_site
 from .list import list_wedding_sites
 from .patch import patch_wedding_site
-from .schemas import WeddingSiteRead
+from .schemas import AgentChatHistoryPageResponse, WeddingSiteRead
 
 wedding_sites_router = APIRouter(prefix="/wedding-sites", tags=["wedding-sites"])
 
@@ -68,6 +69,25 @@ wedding_sites_router.add_api_route(
         ),
     },
     summary="Owner agent turn (persists WeddingSite.config; stub reply until LLM is wired)",
+)
+
+wedding_sites_router.add_api_route(
+    "/{site_id}/chat-history",
+    get_wedding_site_chat_history,
+    methods=["GET"],
+    response_model=AgentChatHistoryPageResponse,
+    responses={
+        **_auth_responses,
+        status.HTTP_404_NOT_FOUND: get_error_response(
+            status.HTTP_404_NOT_FOUND,
+            "Wedding site not found",
+        ),
+        status.HTTP_422_UNPROCESSABLE_CONTENT: get_error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Validation error",
+        ),
+    },
+    summary="Get paginated chat history for a wedding site",
 )
 
 wedding_sites_router.add_api_route(

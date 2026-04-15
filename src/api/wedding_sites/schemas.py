@@ -39,3 +39,15 @@ class WeddingSiteUpdate(BaseModel):
     status: SiteStatus | None = None
     config: dict[str, Any] | None = None
     schema_version: int | None = None
+
+
+class AgentChatHistoryItem(BaseModel):
+    id: UUID
+    role: str
+    content: str
+    created_at: datetime
+
+
+class AgentChatHistoryPageResponse(BaseModel):
+    items: list[AgentChatHistoryItem]
+    next_before_message_id: UUID | None = None

@@ -162,11 +162,13 @@ class WeddingSitesService:
         site_id: UUID,
         owner_user_id: UUID,
         limit: int | None = None,
+        before_message_id: UUID | None = None,
     ) -> list[AgentConversationMessage]:
         await self.get_by_id_for_user(site_id=site_id, owner_user_id=owner_user_id)
         return await self.repository.list_agent_conversation_messages(
             wedding_site_id=site_id,
             limit=limit,
+            before_message_id=before_message_id,
         )
 
     async def list_agent_chat_history_for_site(
@@ -185,6 +187,26 @@ class WeddingSitesService:
             limit=message_limit,
         )
         return self._agent_conversation_rows_to_history(rows)
+
+    async def list_agent_chat_history_page_for_site(
+        self,
+        *,
+        site_id: UUID,
+        owner_user_id: UUID,
+        limit: int,
+        before_message_id: UUID | None = None,
+    ) -> tuple[list[AgentConversationMessage], UUID | None]:
+        rows = await self.list_agent_conversation_messages_for_site(
+            site_id=site_id,
+            owner_user_id=owner_user_id,
+            limit=limit + 1,
+            before_message_id=before_message_id,
+        )
+        if len(rows) <= limit:
+            return rows, None
+        page_rows = rows[-limit:]
+        next_before_message_id = page_rows[0].id
+        return page_rows, next_before_message_id
 
     async def append_agent_chat_turn(
         self,
@@ -206,6 +228,26 @@ class WeddingSitesService:
             content=assistant_message,
         )
         await self.repository.add_agent_conversation_messages([user_row, assistant_row])
+
+    async def append_agent_chat_history(
+        self,
+        site_id: UUID,
+        owner_user_id: UUID,
+        history: list[dict[str, str]],
+    ) -> None:
+        await self.get_by_id_for_user(site_id=site_id, owner_user_id=owner_user_id)
+        rows: list[AgentConversationMessage] = []
+        for message in history:
+            role_value = AgentMessageRole(message["role"])
+            rows.append(
+                AgentConversationMessage(
+                    wedding_site_id=site_id,
+                    role=role_value,
+                    content=message["content"],
+                )
+            )
+        if rows:
+            await self.repository.add_agent_conversation_messages(rows)
 
     async def delete_for_user(self, *, site_id: UUID, owner_user_id: UUID) -> None:
         site = await self.repository.get_by_id_for_user(

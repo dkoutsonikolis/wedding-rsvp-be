@@ -46,6 +46,10 @@ async def test__register__with_anonymous_session_token(users_service: UsersServi
     # Arrange
     session_token, session_row = await users_service._anonymous_sessions_service.create_session()
     session_row.config = {"hero": {"title": "Copied Draft"}, "schedule": {"enabled": True}}
+    session_row.agent_chat_history = [
+        {"role": "user", "content": "hello"},
+        {"role": "assistant", "content": "hi there"},
+    ]
     await users_service._anonymous_sessions_service.repository.save(session_row)
     # Act
     user = await users_service.register(
@@ -54,10 +58,18 @@ async def test__register__with_anonymous_session_token(users_service: UsersServi
         anonymous_session_token=session_token,
     )
     sites = await users_service._wedding_sites_service.list_for_user(user.id)
+    imported_history = await users_service._wedding_sites_service.list_agent_chat_history_for_site(
+        site_id=sites[0].id,
+        owner_user_id=user.id,
+    )
     # Assert
     assert len(sites) == 1
     assert sites[0].config["hero"]["title"] == "Copied Draft"
     assert sites[0].config["schedule"]["enabled"] is True
+    assert imported_history == [
+        {"role": "user", "content": "hello"},
+        {"role": "assistant", "content": "hi there"},
+    ]
     with pytest.raises(AnonymousSessionExpiredError):
         await users_service._anonymous_sessions_service.get_active_by_plaintext_token(session_token)
 

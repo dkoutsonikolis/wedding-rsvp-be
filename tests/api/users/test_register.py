@@ -70,6 +70,11 @@ async def test__register__with_anonymous_session_token(client: AsyncClient):
         "/api/v1/wedding-sites",
         headers={"Authorization": f"Bearer {access_token}"},
     )
+    site_id = sites_response.json()[0]["id"]
+    owner_chat_history = await client.get(
+        f"/api/v1/wedding-sites/{site_id}/chat-history",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
     expired_public_trial_turn = await client.post(
         "/api/v1/public/agent/turn",
         json={"session_token": session_token, "message": "Can I keep using this token?"},
@@ -77,9 +82,16 @@ async def test__register__with_anonymous_session_token(client: AsyncClient):
     # Assert
     assert register_response.status_code == 201
     assert sites_response.status_code == 200
+    assert owner_chat_history.status_code == 200
     assert expired_public_trial_turn.status_code == 401
     sites = sites_response.json()
     assert len(sites) == 1
+    items = owner_chat_history.json()["items"]
+    assert len(items) == 2
+    assert items[0]["role"] == "user"
+    assert items[0]["content"] == "Build my site"
+    assert items[1]["role"] == "assistant"
+    assert items[1]["content"] == draft_turn.json()["message"]
 
 
 @pytest.mark.asyncio

@@ -26,6 +26,18 @@ class AgentTurnResponse(BaseModel):
     )
 
 
+class AgentSessionStateResponse(BaseModel):
+    config: dict[str, Any]
+    chat_history: list[ChatHistoryItem] = Field(
+        default_factory=list,
+        description="Full persisted chat for this session or site (same order as stored)",
+    )
+    interactions_remaining: int | None = Field(
+        None,
+        description="Remaining trial turns for anonymous sessions only",
+    )
+
+
 class PublicAgentSessionCreateResponse(BaseModel):
     session_token: str
     interactions_remaining: int = 3

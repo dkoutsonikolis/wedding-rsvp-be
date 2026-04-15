@@ -13,6 +13,7 @@ from domains.users.models import User
 from domains.users.password import hash_password, verify_password
 from domains.users.repository import UsersRepository
 from domains.wedding_sites.service import WeddingSitesService
+from utils.chat_history import normalize_history
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -41,9 +42,15 @@ class UsersService:
         except (AnonymousSessionNotFoundError, AnonymousSessionExpiredError):
             logger.info("Skipping draft import for user %s due to invalid session token", user_id)
             return
-        await self._wedding_sites_service.create(
+        normalized_history = normalize_history(anonymous_session.agent_chat_history)
+        new_site = await self._wedding_sites_service.create(
             owner_user_id=user_id,
             config=dict(anonymous_session.config),
+        )
+        await self._wedding_sites_service.append_agent_chat_history(
+            site_id=new_site.id,
+            owner_user_id=user_id,
+            history=normalized_history,
         )
         await self._anonymous_sessions_service.expire_session(anonymous_session)
 

@@ -92,6 +92,16 @@ class AgentService:
         chat_history = normalize_history(updated.agent_chat_history)
         return reply, new_config, remaining, chat_history
 
+    async def public_session_state(
+        self,
+        *,
+        session_token: str,
+    ) -> tuple[dict[str, Any], int, list[dict[str, str]]]:
+        row = await self._anonymous_sessions.get_active_by_plaintext_token(session_token)
+        remaining = max(0, TRIAL_INTERACTION_LIMIT - row.interaction_count)
+        chat_history = normalize_history(row.agent_chat_history)
+        return dict(row.config), remaining, chat_history
+
     async def turn(
         self,
         *,

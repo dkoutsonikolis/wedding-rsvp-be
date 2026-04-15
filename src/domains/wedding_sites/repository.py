@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, desc
+from sqlalchemy import and_, delete, desc, or_
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -62,11 +62,31 @@ class WeddingSitesRepository:
         *,
         wedding_site_id: UUID,
         limit: int | None = None,
+        before_message_id: UUID | None = None,
     ) -> list[AgentConversationMessage]:
         """List messages oldest-first. When ``limit`` is set, only the last ``limit`` rows (by time)."""
         stmt = select(AgentConversationMessage).where(
             AgentConversationMessage.wedding_site_id == wedding_site_id
         )
+        if before_message_id is not None:
+            cursor_row_result = await self.session.exec(
+                select(AgentConversationMessage).where(
+                    AgentConversationMessage.wedding_site_id == wedding_site_id,
+                    AgentConversationMessage.id == before_message_id,
+                )
+            )
+            cursor_row = cursor_row_result.first()
+            if cursor_row is None:
+                return []
+            stmt = stmt.where(
+                or_(
+                    col(AgentConversationMessage.created_at) < cursor_row.created_at,
+                    and_(
+                        col(AgentConversationMessage.created_at) == cursor_row.created_at,
+                        col(AgentConversationMessage.id) < cursor_row.id,
+                    ),
+                )
+            )
         if limit is not None:
             stmt = stmt.order_by(
                 desc(col(AgentConversationMessage.created_at)),
