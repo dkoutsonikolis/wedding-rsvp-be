@@ -25,7 +25,10 @@ class WeddingSite(SQLModel, table=True):
     )
     slug: str = Field(unique=True, index=True)
     title: str | None = Field(default=None)
-    status: SiteStatus = Field(default=SiteStatus.DRAFT)
+    status: SiteStatus = Field(
+        default=SiteStatus.DRAFT,
+        sa_column=Column(String(length=32), nullable=False),
+    )
     config: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSONB, nullable=False))
     schema_version: int = Field(default=1)
     created_at: datetime = Field(default_factory=utc_now)
