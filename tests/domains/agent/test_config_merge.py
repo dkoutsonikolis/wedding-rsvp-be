@@ -1,4 +1,7 @@
-from domains.agent.config_processing import merge_model_config_into_base
+from domains.agent.config_processing import (
+    merge_model_config_into_base,
+    merge_stored_config_with_request,
+)
 
 
 def test__merge_model_config_into_base__merges_hero_data_by_block_id():
@@ -91,6 +94,36 @@ def test__merge_model_config_into_base__non_dict_model_config_returns_base_copy(
     # Assert
     assert out == {"blocks": []}
     assert out is not base
+
+
+def test__merge_stored_config_with_request__deep_merges_partial_theme():
+    # Arrange
+    stored = {
+        "theme": {
+            "id": "classic-elegant",
+            "name": "Classic",
+            "colors": {"primary": "#111", "secondary": "#222", "background": "#FFFEF9"},
+            "fonts": {"heading": "Serif"},
+        },
+    }
+    request = {"theme": {"colors": {"background": "#E3F2FD"}}}
+    # Act
+    out = merge_stored_config_with_request(stored=stored, request=request)
+    # Assert
+    assert out["theme"]["id"] == "classic-elegant"
+    assert out["theme"]["fonts"]["heading"] == "Serif"
+    assert out["theme"]["colors"]["background"] == "#E3F2FD"
+    assert out["theme"]["colors"]["primary"] == "#111"
+
+
+def test__merge_stored_config_with_request__ignores_empty_blocks_list():
+    # Arrange
+    stored = {"blocks": [{"id": "hero-1", "type": "hero"}]}
+    request: dict = {"blocks": []}
+    # Act
+    out = merge_stored_config_with_request(stored=stored, request=request)
+    # Assert
+    assert len(out["blocks"]) == 1
 
 
 def test__merge_model_config_into_base__deep_merges_theme():

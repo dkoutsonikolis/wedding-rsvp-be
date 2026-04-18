@@ -70,7 +70,8 @@ class _TurnOutput(BaseModel):
             "Partial site config patch (deep-merged after tool calls). Prefer {} when reorder_blocks "
             "or apply_theme already applied the user's request. get_full_site_config is read-only—if the "
             "user asked for a content/data change and you called it to read nested fields, you must still "
-            "include that edit here (not {})."
+            "include that edit here (not {}). For custom page background or palette tweaks, include "
+            "theme.colors (e.g. theme.colors.background)—{} leaves colors unchanged."
         ),
     )
 

@@ -8,6 +8,7 @@ from domains.agent.chat_history import (
 )
 from domains.agent.config_processing import (
     apply_hero_names_from_user_message_when_unchanged,
+    merge_stored_config_with_request,
     normalize_misplaced_hero_couple_fields,
     normalize_theme_color_field_aliases,
     strip_unknown_top_level_site_config_keys,
@@ -56,7 +57,7 @@ class AgentService:
     ) -> tuple[str, dict[str, Any], int, list[dict[str, str]]]:
         row = await self._anonymous_sessions.get_active_by_plaintext_token_for_update(session_token)
         self._anonymous_sessions.ensure_can_take_turn(row)
-        merged: dict[str, Any] = {**row.config, **(config or {})}
+        merged = merge_stored_config_with_request(stored=dict(row.config), request=config)
         prior = normalize_history(row.agent_chat_history)
         history_for_model = trim_for_model(prior, settings.AGENT_MODEL_HISTORY_MAX_TURNS)
         turn = await self._backend.run(
@@ -114,7 +115,7 @@ class AgentService:
             site_id=site_id,
             owner_user_id=owner_user_id,
         )
-        merged = {**site.config, **(config or {})}
+        merged = merge_stored_config_with_request(stored=dict(site.config), request=config)
         prior = await self._wedding_sites.list_agent_chat_history_for_site(
             site_id=site_id,
             owner_user_id=owner_user_id,

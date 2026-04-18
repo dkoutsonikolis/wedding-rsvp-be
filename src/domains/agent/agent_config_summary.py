@@ -89,6 +89,11 @@ def summarize_wedding_site_config_for_agent(config: dict[str, Any]) -> dict[str,
     theme_out: dict[str, Any] = {}
     if isinstance(theme, dict) and isinstance(theme.get("id"), str):
         theme_out["id"] = theme["id"]
+    # Include palette so the model can adjust theme.colors without guessing current hex values.
+    if isinstance(theme, dict):
+        raw_colors = theme.get("colors")
+        if isinstance(raw_colors, dict) and raw_colors:
+            theme_out["colors"] = {str(k): v for k, v in raw_colors.items() if isinstance(v, str)}
 
     meta = config.get("metadata")
     meta_out: dict[str, Any] = {}

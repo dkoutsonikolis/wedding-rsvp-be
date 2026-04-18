@@ -85,6 +85,39 @@ def _merge_block_lists(base_blocks: Any, patch_blocks: Any) -> list[Any]:
     return result
 
 
+def merge_stored_config_with_request(
+    *,
+    stored: dict[str, Any],
+    request: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Merge an incoming HTTP ``config`` into the persisted snapshot before an agent turn.
+
+    The handler used ``{**stored, **request}``, which **replaces** nested objects like
+    ``theme`` when the client sends a partial ``theme`` (e.g. only ``colors.background``),
+    silently dropping ``theme.id``, fonts, and other keys. That yields a broken base config
+    for tools and merges.
+
+    **Blocks:** when ``request`` includes a **non-empty** ``blocks`` list, it replaces the
+    stored list (full client snapshot). An **empty** ``blocks`` list is ignored—matching
+    ``mergeAgentConfigIntoSite`` on the frontend—so a partial payload cannot wipe sections.
+    """
+    out = copy.deepcopy(stored)
+    if not isinstance(request, dict) or not request:
+        return out
+
+    for key, value in request.items():
+        if key == "blocks":
+            if isinstance(value, list) and len(value) > 0:
+                out["blocks"] = copy.deepcopy(value)
+            continue
+        if isinstance(value, dict) and isinstance(out.get(key), dict):
+            out[key] = _deep_merge_dict(out[key], value)
+        else:
+            out[key] = copy.deepcopy(value)
+
+    return out
+
+
 def merge_model_config_into_base(
     *,
     base: Any,
