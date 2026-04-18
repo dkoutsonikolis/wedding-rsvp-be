@@ -7,11 +7,12 @@ from domains.users.models import User
 from domains.users.service import UsersService
 
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    service: UsersService = Depends(get_users_service),
+async def _authenticate_credentials(
+    credentials: HTTPAuthorizationCredentials,
+    service: UsersService,
 ) -> User:
     try:
         return await service.authenticate_token(credentials.credentials)
@@ -21,3 +22,19 @@ async def get_current_user(
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    service: UsersService = Depends(get_users_service),
+) -> User:
+    return await _authenticate_credentials(credentials, service)
+
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
+    service: UsersService = Depends(get_users_service),
+) -> User | None:
+    if credentials is None:
+        return None
+    return await _authenticate_credentials(credentials, service)

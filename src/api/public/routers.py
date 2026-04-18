@@ -7,11 +7,13 @@ from api.agent.schemas import (
 )
 from api.common import get_error_response
 
+from .contact import submit_contact_message
 from .create_session import create_public_agent_session
 from .session import get_public_agent_session_state
 from .turn import public_agent_turn
 
 public_agent_router = APIRouter(prefix="/public/agent", tags=["public-agent"])
+public_router = APIRouter(prefix="/public", tags=["public"])
 
 public_agent_router.add_api_route(
     "/sessions",
@@ -74,4 +76,27 @@ public_agent_router.add_api_route(
         ),
     },
     summary="Get anonymous session state and full chat history",
+)
+
+public_router.add_api_route(
+    "/contact",
+    submit_contact_message,
+    methods=["POST"],
+    response_model=None,
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: get_error_response(
+            status.HTTP_401_UNAUTHORIZED,
+            "Invalid authentication credentials",
+        ),
+        status.HTTP_422_UNPROCESSABLE_CONTENT: get_error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Validation error",
+        ),
+        status.HTTP_429_TOO_MANY_REQUESTS: get_error_response(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Too many requests",
+        ),
+    },
+    summary="Submit a public contact form message",
 )

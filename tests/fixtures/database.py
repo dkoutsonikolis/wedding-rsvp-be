@@ -168,6 +168,7 @@ async def test_engine(test_database):
 
     # Register all SQLModel table classes before create_all
     import domains.anonymous_agent_sessions.models  # noqa: F401
+    import domains.contact.models  # noqa: F401
     import domains.users.models  # noqa: F401
     import domains.wedding_sites.models  # noqa: F401
 

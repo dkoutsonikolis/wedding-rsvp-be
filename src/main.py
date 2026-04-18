@@ -10,7 +10,7 @@ from sqlalchemy import text
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.common.schemas import ErrorResponse
-from api.public import public_agent_router
+from api.public import public_agent_router, public_router
 from api.users import auth_router, users_router
 from api.wedding_sites import wedding_sites_router
 from config import settings
@@ -149,6 +149,7 @@ api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(auth_router)
 api_v1.include_router(users_router)
 api_v1.include_router(public_agent_router)
+api_v1.include_router(public_router)
 api_v1.include_router(wedding_sites_router)
 
 app.include_router(api_v1)

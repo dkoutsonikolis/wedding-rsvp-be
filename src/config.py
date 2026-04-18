@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     ANONYMOUS_AGENT_SESSION_TTL_DAYS: int = 7
     RATE_LIMIT_PUBLIC_AGENT_SESSION: str = "30/minute"
     RATE_LIMIT_PUBLIC_AGENT_TURN: str = "60/minute"
+    RATE_LIMIT_PUBLIC_CONTACT: str = "20/minute"
 
     # Agent: explicit backend choice (set in .env; factory runs at app startup).
     # auto = Gemini if GOOGLE_API_KEY, else Anthropic if ANTHROPIC_API_KEY, else Groq if GROQ_API_KEY, else stub.
