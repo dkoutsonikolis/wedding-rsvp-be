@@ -1,11 +1,23 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from config import settings
 
 
 class AgentTurnRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=8000)
+    message: str = Field(..., min_length=1)
     config: dict[str, Any] | None = None
+
+    @field_validator("message")
+    @classmethod
+    def validate_message_length(cls, value: str) -> str:
+        trimmed = value.strip()
+        if len(trimmed) > settings.AGENT_USER_MESSAGE_MAX_CHARS:
+            raise ValueError(
+                f"message must be at most {settings.AGENT_USER_MESSAGE_MAX_CHARS} characters"
+            )
+        return trimmed
 
 
 class ChatHistoryItem(BaseModel):
@@ -50,5 +62,15 @@ class PublicAgentSessionCreateResponse(BaseModel):
 
 class PublicAgentTurnRequest(BaseModel):
     session_token: str = Field(..., min_length=1)
-    message: str = Field(..., min_length=1, max_length=8000)
+    message: str = Field(..., min_length=1)
     config: dict[str, Any] | None = None
+
+    @field_validator("message")
+    @classmethod
+    def validate_message_length(cls, value: str) -> str:
+        trimmed = value.strip()
+        if len(trimmed) > settings.AGENT_ANON_MESSAGE_MAX_CHARS:
+            raise ValueError(
+                f"message must be at most {settings.AGENT_ANON_MESSAGE_MAX_CHARS} characters"
+            )
+        return trimmed

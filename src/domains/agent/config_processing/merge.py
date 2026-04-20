@@ -98,8 +98,10 @@ def merge_stored_config_with_request(
     for tools and merges.
 
     **Blocks:** when ``request`` includes a **non-empty** ``blocks`` list, it replaces the
-    stored list (full client snapshot). An **empty** ``blocks`` list is ignored—matching
-    ``mergeAgentConfigIntoSite`` on the frontend—so a partial payload cannot wipe sections.
+    stored list (full client snapshot). An **empty** ``blocks`` list is ignored when the
+    stored snapshot already has sections—matching ``mergeAgentConfigIntoSite`` on the frontend—
+    so a partial payload cannot wipe them. If stored has no blocks (missing or empty list),
+    an empty request list sets ``blocks`` to ``[]`` (explicit empty snapshot).
     """
     out = copy.deepcopy(stored)
     if not isinstance(request, dict) or not request:
@@ -107,8 +109,14 @@ def merge_stored_config_with_request(
 
     for key, value in request.items():
         if key == "blocks":
-            if isinstance(value, list) and len(value) > 0:
+            if not isinstance(value, list):
+                continue
+            if len(value) > 0:
                 out["blocks"] = copy.deepcopy(value)
+                continue
+            stored_blocks = out.get("blocks")
+            if not isinstance(stored_blocks, list) or len(stored_blocks) == 0:
+                out["blocks"] = []
             continue
         if isinstance(value, dict) and isinstance(out.get(key), dict):
             out[key] = _deep_merge_dict(out[key], value)

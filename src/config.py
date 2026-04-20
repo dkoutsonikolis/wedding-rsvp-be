@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     AGENT_BACKEND: Literal["auto", "stub", "gemini", "groq", "anthropic"] = "auto"
     # Max completed user+assistant turns from chat history included in the model prompt (owner sites may store more).
     AGENT_MODEL_HISTORY_MAX_TURNS: int = 5
+    # Max length of a single user message passed to the agent.
+    # Keep anonymous trial prompts much shorter than authenticated prompts to reduce abuse surface.
+    AGENT_ANON_MESSAGE_MAX_CHARS: int = 200
+    AGENT_USER_MESSAGE_MAX_CHARS: int = 500
 
     # Gemini via Generative Language API (same env name as Pydantic AI / google-genai).
     GOOGLE_API_KEY: str | None = None

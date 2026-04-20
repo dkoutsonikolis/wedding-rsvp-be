@@ -95,3 +95,19 @@ async def test__get_public_agent_session_state__returns_history_and_remaining(cl
     assert data["chat_history"][0]["role"] == "user"
     assert data["chat_history"][0]["content"] == "hello there"
     assert data["chat_history"][1]["role"] == "assistant"
+
+
+@pytest.mark.asyncio
+async def test__public_agent_turn__rejects_overlong_message(client: AsyncClient):
+    # Arrange
+    session = await client.post("/api/v1/public/agent/sessions")
+    token = session.json()["session_token"]
+    too_long = "a" * 201
+    # Act
+    response = await client.post(
+        "/api/v1/public/agent/turn",
+        json={"session_token": token, "message": too_long},
+    )
+    # Assert
+    assert response.status_code == 422
+    assert "detail" in response.json()

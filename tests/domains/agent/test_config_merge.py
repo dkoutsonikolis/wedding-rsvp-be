@@ -126,6 +126,16 @@ def test__merge_stored_config_with_request__ignores_empty_blocks_list():
     assert len(out["blocks"]) == 1
 
 
+def test__merge_stored_config_with_request__empty_blocks_sets_when_nothing_stored():
+    # Arrange
+    stored: dict = {}
+    request = {"blocks": []}
+    # Act
+    out = merge_stored_config_with_request(stored=stored, request=request)
+    # Assert
+    assert out["blocks"] == []
+
+
 def test__merge_model_config_into_base__deep_merges_theme():
     # Arrange
     base = {"theme": {"id": "t1", "colors": {"primary": "#000", "secondary": "#fff"}}}

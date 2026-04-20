@@ -6,7 +6,9 @@ from api.agent.schemas import (
     PublicAgentSessionCreateResponse,
 )
 from api.common import get_error_response
+from api.public.schemas import PublicClientConfigResponse
 
+from .client_config import get_public_client_config
 from .contact import submit_contact_message
 from .create_session import create_public_agent_session
 from .session import get_public_agent_session_state
@@ -76,6 +78,14 @@ public_agent_router.add_api_route(
         ),
     },
     summary="Get anonymous session state and full chat history",
+)
+
+public_router.add_api_route(
+    "/client-config",
+    get_public_client_config,
+    methods=["GET"],
+    response_model=PublicClientConfigResponse,
+    summary="Get FE-visible public config (limits, etc.)",
 )
 
 public_router.add_api_route(

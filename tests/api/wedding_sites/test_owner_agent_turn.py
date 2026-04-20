@@ -89,3 +89,27 @@ async def test__agent_turn__requires_bearer(client: AsyncClient, auth_headers: d
     )
     # Assert
     assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test__agent_turn__rejects_overlong_message(
+    client: AsyncClient, auth_headers: dict[str, str]
+):
+    # Arrange
+    created = await client.post(
+        "/api/v1/wedding-sites",
+        headers=auth_headers,
+        json={"slug": "long-message-site"},
+    )
+    assert created.status_code == 201
+    site_id = created.json()["id"]
+    too_long = "a" * 501
+    # Act
+    response = await client.post(
+        f"/api/v1/wedding-sites/{site_id}/agent/turn",
+        headers=auth_headers,
+        json={"message": too_long},
+    )
+    # Assert
+    assert response.status_code == 422
+    assert "detail" in response.json()
