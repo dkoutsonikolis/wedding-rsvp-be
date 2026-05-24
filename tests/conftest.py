@@ -21,5 +21,6 @@ os.environ["RATE_LIMIT_PUBLIC_AGENT_TURN"] = "10000/minute"
 # Import all fixtures to make them available at the top level
 from tests.fixtures.client import *  # noqa: F403, F401
 from tests.fixtures.database import *  # noqa: F403, F401
+from tests.fixtures.rsvp_responses import *  # noqa: F403, F401
 from tests.fixtures.users import *  # noqa: F403, F401
 from tests.fixtures.wedding_sites import *  # noqa: F403, F401

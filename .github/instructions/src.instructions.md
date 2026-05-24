@@ -28,6 +28,7 @@ applyTo: "src/**/*.py"
 - **Errors:** For documented OpenAPI errors on a route, use **`get_error_response(...)`** from `api.common` in `add_api_route(..., responses={...})`.
 - **Logging:** Use **`get_logger(__name__)`** from `utils.logging` — **no** `print()`.
 - **Migrations:** New/changed SQLModel tables must be reflected in **`src/db/migrations/env.py`** imports (for autogenerate) and a new Alembic revision.
+- **Function signatures:** Do **not** use a bare keyword-only separator **`*`** (e.g. `def submit(self, *, slug: str)`). Use normal parameters; callers may still pass arguments by name.
 
 ---
 
@@ -47,7 +48,7 @@ applyTo: "src/**/*.py"
 
 - Domain logic or `session.exec(...)` inside **`api/`** route functions.
 - **`print()`** for diagnostics.
-- Keyword-only separator `*` in function/method signatures.
+- Bare keyword-only separator `*` in function/method signatures (see **MUST** above).
 - Docstrings that only restate the function name. Args/Returns blocks when types already explain the contract.
 - Comments that narrate **what** the next line does (obvious from code).
 - URL paths that mirror **only** internal folder names without reflecting a resource (e.g. stutter segments like `/items/items`).

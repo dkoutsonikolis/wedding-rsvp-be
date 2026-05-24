@@ -74,6 +74,9 @@ class WeddingSitesService:
     async def list_for_user(self, owner_user_id: UUID) -> list[WeddingSite]:
         return await self.repository.list_for_user(owner_user_id)
 
+    async def get_by_slug(self, slug: str) -> WeddingSite | None:
+        return await self.repository.get_by_slug(slug)
+
     async def get_by_id_for_user(self, *, site_id: UUID, owner_user_id: UUID) -> WeddingSite:
         site = await self.repository.get_by_id_for_user(
             site_id=site_id, owner_user_id=owner_user_id
