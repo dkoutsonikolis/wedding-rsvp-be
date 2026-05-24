@@ -3,7 +3,11 @@ from fastapi import Depends, HTTPException, status
 from api.common.dependencies import get_current_user
 from domains.users.models import User
 from domains.wedding_sites.dependencies import get_wedding_sites_service
-from domains.wedding_sites.exceptions import InvalidSlugError, SlugConflictError
+from domains.wedding_sites.exceptions import (
+    InvalidSlugError,
+    SlugConflictError,
+    WeddingSiteAlreadyExistsError,
+)
 from domains.wedding_sites.service import WeddingSitesService
 
 from .schemas import WeddingSiteCreate, WeddingSiteRead
@@ -29,6 +33,11 @@ async def create_wedding_site(
             detail=str(e),
         ) from e
     except SlugConflictError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        ) from e
+    except WeddingSiteAlreadyExistsError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),

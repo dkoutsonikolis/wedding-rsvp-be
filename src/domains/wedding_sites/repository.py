@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import and_, delete, desc, or_
+from sqlalchemy import and_, desc, or_
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -52,10 +52,6 @@ class WeddingSitesRepository:
         except IntegrityError:
             await self.session.rollback()
             raise
-
-    async def delete(self, site: WeddingSite) -> None:
-        await self.session.exec(delete(WeddingSite).where(col(WeddingSite.id) == site.id))
-        await self.session.commit()
 
     async def list_agent_conversation_messages(
         self,

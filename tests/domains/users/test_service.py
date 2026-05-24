@@ -42,6 +42,18 @@ async def test__register__case_normalized_duplicate(users_service: UsersService)
 
 
 @pytest.mark.asyncio
+async def test__register__creates_default_site_without_anon_token(users_service: UsersService):
+    # Arrange
+    # Act
+    user = await users_service.register(email="default@example.com", password="password123")
+    sites = await users_service._wedding_sites_service.list_for_user(user.id)
+    # Assert
+    assert len(sites) == 1
+    assert sites[0].config == {}
+    assert sites[0].status == "draft"
+
+
+@pytest.mark.asyncio
 async def test__register__with_anonymous_session_token(users_service: UsersService):
     # Arrange
     session_token, session_row = await users_service._anonymous_sessions_service.create_session()

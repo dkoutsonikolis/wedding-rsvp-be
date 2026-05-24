@@ -4,14 +4,14 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test__create_wedding_site__with_explicit_slug(
-    client: AsyncClient, auth_headers: dict[str, str]
+    client: AsyncClient, auth_headers_without_site: dict[str, str]
 ):
     # Arrange
     payload = {"slug": "garden-party", "title": "Garden party"}
     # Act
     response = await client.post(
         "/api/v1/wedding-sites",
-        headers=auth_headers,
+        headers=auth_headers_without_site,
         json=payload,
     )
     # Assert
@@ -25,13 +25,15 @@ async def test__create_wedding_site__with_explicit_slug(
 
 
 @pytest.mark.asyncio
-async def test__create_wedding_site__auto_slug(client: AsyncClient, auth_headers: dict[str, str]):
+async def test__create_wedding_site__auto_slug(
+    client: AsyncClient, auth_headers_without_site: dict[str, str]
+):
     # Arrange
     payload = {"title": "Beach Wedding Day"}
     # Act
     response = await client.post(
         "/api/v1/wedding-sites",
-        headers=auth_headers,
+        headers=auth_headers_without_site,
         json=payload,
     )
     # Assert
@@ -42,31 +44,23 @@ async def test__create_wedding_site__auto_slug(client: AsyncClient, auth_headers
 
 
 @pytest.mark.asyncio
-async def test__create_wedding_site__duplicate_slug(
+async def test__create_wedding_site__rejects_second_site_for_account(
     client: AsyncClient, auth_headers: dict[str, str]
 ):
-    # Arrange
-    slug = "unique-clash"
-    first = await client.post(
-        "/api/v1/wedding-sites",
-        headers=auth_headers,
-        json={"slug": slug},
-    )
-    assert first.status_code == 201
     # Act
     second = await client.post(
         "/api/v1/wedding-sites",
         headers=auth_headers,
-        json={"slug": slug},
+        json={"slug": "another-site"},
     )
     # Assert
     assert second.status_code == 409
-    assert "detail" in second.json()
+    assert "already has a wedding site" in second.json()["detail"]
 
 
 @pytest.mark.asyncio
 async def test__create_wedding_site__invalid_slug(
-    client: AsyncClient, auth_headers: dict[str, str]
+    client: AsyncClient, auth_headers_without_site: dict[str, str]
 ):
     # Arrange
     # Slugs are normalized to lowercase; use characters still forbidden after that (no underscores).
@@ -74,7 +68,7 @@ async def test__create_wedding_site__invalid_slug(
     # Act
     response = await client.post(
         "/api/v1/wedding-sites",
-        headers=auth_headers,
+        headers=auth_headers_without_site,
         json=payload,
     )
     # Assert

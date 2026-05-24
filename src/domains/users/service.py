@@ -73,6 +73,9 @@ class UsersService:
             raise
         if anonymous_session_token is not None:
             await self._copy_anonymous_site_to_user(user.id, anonymous_session_token)
+        sites = await self._wedding_sites_service.list_for_user(user.id)
+        if not sites:
+            await self._wedding_sites_service.create(owner_user_id=user.id)
         return user
 
     async def authenticate(self, email: str, password: str) -> User:

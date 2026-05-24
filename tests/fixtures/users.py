@@ -5,6 +5,7 @@ from httpx import AsyncClient
 
 from domains.anonymous_agent_sessions.repository import AnonymousAgentSessionsRepository
 from domains.anonymous_agent_sessions.service import AnonymousAgentSessionsService
+from domains.users.password import hash_password
 from domains.users.repository import UsersRepository
 from domains.users.service import UsersService
 from domains.wedding_sites.repository import WeddingSitesRepository
@@ -41,3 +42,27 @@ async def auth_headers(client: AsyncClient) -> dict[str, str]:
     )
     token = login.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture
+async def auth_headers_without_site(client: AsyncClient, test_session) -> dict[str, str]:
+    """Logged-in user with no wedding site (created via repository, not register)."""
+    email = f"user-{uuid.uuid4().hex[:12]}@example.com"
+    repo = UsersRepository(test_session)
+    await repo.create(email=email, password_hash=hash_password("password123"))
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "password123"},
+    )
+    token = login.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture
+async def auth_user_site_id(client: AsyncClient, auth_headers: dict[str, str]) -> str:
+    """Wedding site id created for the user during register."""
+    listed = await client.get("/api/v1/wedding-sites", headers=auth_headers)
+    assert listed.status_code == 200
+    sites = listed.json()
+    assert len(sites) == 1
+    return sites[0]["id"]

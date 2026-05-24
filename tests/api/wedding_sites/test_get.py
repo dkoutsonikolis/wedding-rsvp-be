@@ -1,3 +1,4 @@
+import re
 import uuid
 
 import pytest
@@ -5,22 +6,18 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test__get_wedding_site__success(client: AsyncClient, auth_headers: dict[str, str]):
-    # Arrange
-    created = await client.post(
-        "/api/v1/wedding-sites",
-        headers=auth_headers,
-        json={"slug": "get-me", "config": {"blocks": []}},
-    )
-    site_id = created.json()["id"]
+async def test__get_wedding_site__success(
+    client: AsyncClient, auth_headers: dict[str, str], auth_user_site_id: str
+):
     # Act
-    response = await client.get(f"/api/v1/wedding-sites/{site_id}", headers=auth_headers)
+    response = await client.get(f"/api/v1/wedding-sites/{auth_user_site_id}", headers=auth_headers)
     # Assert
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == site_id
-    assert data["slug"] == "get-me"
-    assert data["config"] == {"blocks": []}
+    assert data["id"] == auth_user_site_id
+    assert data["status"] == "draft"
+    assert data["config"] == {}
+    assert re.fullmatch(r"site-[0-9a-f]{12}", data["slug"])
 
 
 @pytest.mark.asyncio
@@ -46,12 +43,8 @@ async def test__get_wedding_site__other_owner(client: AsyncClient):
         json={"email": email_a, "password": "password123"},
     )
     headers_a = {"Authorization": f"Bearer {login_a.json()['access_token']}"}
-    created = await client.post(
-        "/api/v1/wedding-sites",
-        headers=headers_a,
-        json={"slug": "owner-a-only"},
-    )
-    site_id = created.json()["id"]
+    sites_a = await client.get("/api/v1/wedding-sites", headers=headers_a)
+    site_id = sites_a.json()[0]["id"]
 
     email_b = f"b-{uuid.uuid4().hex[:10]}@example.com"
     await client.post(

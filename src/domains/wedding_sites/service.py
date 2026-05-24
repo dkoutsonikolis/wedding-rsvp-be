@@ -8,6 +8,7 @@ from domains.wedding_sites.enums import AgentMessageRole, SiteStatus
 from domains.wedding_sites.exceptions import (
     InvalidSlugError,
     SlugConflictError,
+    WeddingSiteAlreadyExistsError,
     WeddingSiteNotFoundError,
 )
 from domains.wedding_sites.models import AgentConversationMessage, WeddingSite
@@ -91,6 +92,8 @@ class WeddingSitesService:
         config: dict[str, Any] | None = None,
         schema_version: int = 1,
     ) -> WeddingSite:
+        if await self.repository.list_for_user(owner_user_id):
+            raise WeddingSiteAlreadyExistsError("Account already has a wedding site")
         if slug is not None and slug.strip():
             normalized = self._normalize_slug(slug)
             existing = await self.repository.get_by_slug(normalized)
@@ -115,6 +118,8 @@ class WeddingSitesService:
             return await self.repository.create(site)
         except IntegrityError as e:
             logger.warning("create wedding site failed integrity check: %s", e)
+            if await self.repository.list_for_user(owner_user_id):
+                raise WeddingSiteAlreadyExistsError("Account already has a wedding site") from e
             raise SlugConflictError(f"Slug '{normalized}' is already in use") from e
 
     async def update_for_user(
@@ -248,11 +253,3 @@ class WeddingSitesService:
             )
         if rows:
             await self.repository.add_agent_conversation_messages(rows)
-
-    async def delete_for_user(self, *, site_id: UUID, owner_user_id: UUID) -> None:
-        site = await self.repository.get_by_id_for_user(
-            site_id=site_id, owner_user_id=owner_user_id
-        )
-        if site is None:
-            raise WeddingSiteNotFoundError("Wedding site not found")
-        await self.repository.delete(site)

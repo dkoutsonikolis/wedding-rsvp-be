@@ -20,7 +20,7 @@ class WeddingSite(SQLModel, table=True):
             PG_UUID(as_uuid=True),
             ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
-            index=True,
+            unique=True,
         )
     )
     slug: str = Field(unique=True, index=True)

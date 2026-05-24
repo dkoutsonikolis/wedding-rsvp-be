@@ -4,16 +4,10 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test__get_wedding_site_chat_history__returns_recent_messages_and_cursor(
-    client: AsyncClient, auth_headers: dict[str, str]
+    client: AsyncClient, auth_headers: dict[str, str], auth_user_site_id: str
 ):
     # Arrange
-    created = await client.post(
-        "/api/v1/wedding-sites",
-        headers=auth_headers,
-        json={"slug": "owner-chat-history"},
-    )
-    assert created.status_code == 201
-    site_id = created.json()["id"]
+    site_id = auth_user_site_id
     first_turn = await client.post(
         f"/api/v1/wedding-sites/{site_id}/agent/turn",
         headers=auth_headers,
@@ -45,16 +39,10 @@ async def test__get_wedding_site_chat_history__returns_recent_messages_and_curso
 
 @pytest.mark.asyncio
 async def test__get_wedding_site_chat_history__before_message_id_returns_previous_page(
-    client: AsyncClient, auth_headers: dict[str, str]
+    client: AsyncClient, auth_headers: dict[str, str], auth_user_site_id: str
 ):
     # Arrange
-    created = await client.post(
-        "/api/v1/wedding-sites",
-        headers=auth_headers,
-        json={"slug": "owner-chat-history-before-id"},
-    )
-    assert created.status_code == 201
-    site_id = created.json()["id"]
+    site_id = auth_user_site_id
     first_turn = await client.post(
         f"/api/v1/wedding-sites/{site_id}/agent/turn",
         headers=auth_headers,

@@ -8,7 +8,6 @@ from api.common import get_error_response
 from .agent_turn import agent_turn_for_site
 from .chat_history import get_wedding_site_chat_history
 from .create import create_wedding_site
-from .delete import delete_wedding_site
 from .get_one import get_wedding_site
 from .list import list_wedding_sites
 from .patch import patch_wedding_site
@@ -42,7 +41,7 @@ wedding_sites_router.add_api_route(
         **_auth_responses,
         status.HTTP_409_CONFLICT: get_error_response(
             status.HTTP_409_CONFLICT,
-            "Slug already in use",
+            "Slug already in use or account already has a wedding site",
         ),
         status.HTTP_422_UNPROCESSABLE_CONTENT: get_error_response(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -118,7 +117,7 @@ wedding_sites_router.add_api_route(
         ),
         status.HTTP_409_CONFLICT: get_error_response(
             status.HTTP_409_CONFLICT,
-            "Slug already in use",
+            "Slug already in use or account already has a wedding site",
         ),
         status.HTTP_422_UNPROCESSABLE_CONTENT: get_error_response(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -126,20 +125,4 @@ wedding_sites_router.add_api_route(
         ),
     },
     summary="Partially update a wedding site",
-)
-
-wedding_sites_router.add_api_route(
-    "/{site_id}",
-    delete_wedding_site,
-    methods=["DELETE"],
-    response_model=None,
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses={
-        **_auth_responses,
-        status.HTTP_404_NOT_FOUND: get_error_response(
-            status.HTTP_404_NOT_FOUND,
-            "Wedding site not found",
-        ),
-    },
-    summary="Delete a wedding site",
 )

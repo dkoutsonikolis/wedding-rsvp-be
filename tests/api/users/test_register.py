@@ -112,4 +112,30 @@ async def test__register__with_invalid_anonymous_session_token(client: AsyncClie
     # Assert
     assert register_response.status_code == 201
     assert sites_response.status_code == 200
-    assert sites_response.json() == []
+    sites = sites_response.json()
+    assert len(sites) == 1
+    assert sites[0]["status"] == "draft"
+    assert sites[0]["config"] == {}
+
+
+@pytest.mark.asyncio
+async def test__register__creates_default_site_without_anon_token(client: AsyncClient):
+    # Arrange
+    register_payload = {
+        "email": "default-site@example.com",
+        "password": "password123",
+    }
+    # Act
+    register_response = await client.post("/api/v1/auth/register", json=register_payload)
+    access_token = register_response.json()["access_token"]
+    sites_response = await client.get(
+        "/api/v1/wedding-sites",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    # Assert
+    assert register_response.status_code == 201
+    assert sites_response.status_code == 200
+    sites = sites_response.json()
+    assert len(sites) == 1
+    assert sites[0]["status"] == "draft"
+    assert sites[0]["config"] == {}
