@@ -35,3 +35,8 @@ class RsvpResponseRead(BaseModel):
     party_size: int
     notes: str | None
     created_at: datetime
+
+
+class RsvpResponsesPageResponse(BaseModel):
+    items: list[RsvpResponseRead]
+    next_before_response_id: UUID | None = None
