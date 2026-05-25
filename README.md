@@ -128,10 +128,12 @@ This installs pre-commit hooks that automatically run code quality checks (forma
   - `POST /api/v1/auth/refresh` — body `{ "refresh_token": "..." }`; returns a new token pair (previous refresh JWTs are not blacklisted—stateless rotation only)
   - `GET /api/v1/user` — current user; same Bearer header as below
   - **Wedding sites** (Bearer required) — `GET|POST /api/v1/wedding-sites`, `GET|PATCH /api/v1/wedding-sites/{site_id}`; one site per account. **409** if `slug` is taken or the account already has a site, **404** if the id is missing or not yours, **422** for invalid slug format. `POST` body: optional `slug`, `title`, `status` (`draft`|`published`), `config` (object), `schema_version`. `PATCH` accepts any subset of those fields. Registration creates a draft site when no anonymous trial draft is imported.
+  - **Owner RSVP list** (Bearer required) — `GET /api/v1/wedding-sites/{site_id}/rsvp-responses?limit=20&before_response_id=<uuid>` returns `{ items, next_before_response_id }` (newest first). Each item matches the public submit response shape (`id`, `name`, `email`, `phone`, `is_attending`, `party_size`, `notes`, `created_at`). Query `limit` defaults to **20**, max **50**; pass `before_response_id` from the previous page’s `next_before_response_id` to load older rows. **404** if the site id is missing or not yours.
+  - **Public RSVP submit** (no Bearer) — `POST /api/v1/public/wedding-sites/{slug}/rsvp-responses` with `{ name, email?, phone?, is_attending, party_size?, notes? }` returns **201** and the created response (`RsvpResponseRead`). At least one of **`email`** or **`phone`** is required. When **`is_attending`** is `true`, **`party_size`** must be **1–10** (default **1**); when `false`, **`party_size`** must be **`0`**. **`notes`** is optional (max 2000 characters). Duplicate submissions per contact are allowed for now. **404** if the slug is unknown or the site is not **`published`**; **422** for validation errors.
   - **Public contact form** (optional Bearer) — `POST /api/v1/public/contact` with `{ name, email?, subject, message }` returns **204** with an empty body. If `Authorization: Bearer <access_token>` is provided, the server stores the authenticated user id and uses the account email (ignores `email` in the body).
   - **Public agent trial** (no Bearer) — `POST /api/v1/public/agent/sessions` returns `session_token`, `interactions_remaining: 3`, `config`. `POST /api/v1/public/agent/turn` with `{ session_token, message, config? }` returns `{ message, config, interactions_remaining }`. **401** if token missing/invalid/expired; **403** after **3** successful turns per session. Session tokens are stored **hashed**. LLM/provider options are configured in **`.env`** / **`.env.example`** (not required for local stub-only runs).
   - **Owner agent turn** (Bearer required) — `POST /api/v1/wedding-sites/{site_id}/agent/turn` with `{ message, config? }`; merges into **`WeddingSite.config`**; response includes `interactions_remaining: null` (no trial cap).
-- **Rate limits** (per client IP by default): register `5/minute`, login `10/minute`, refresh `30/minute`; public agent session create `30/minute`, turn `60/minute` — override with `RATE_LIMIT_AUTH_*`, `RATE_LIMIT_PUBLIC_AGENT_*` in `.env`
+- **Rate limits** (per client IP by default): register `5/minute`, login `10/minute`, refresh `30/minute`; public RSVP submit `30/minute`; public agent session create `30/minute`, turn `60/minute` — override with `RATE_LIMIT_AUTH_*`, `RATE_LIMIT_PUBLIC_RSVP`, `RATE_LIMIT_PUBLIC_AGENT_*` in `.env`
 - **API Docs**: http://localhost:8000/docs
 - **Alternative Docs**: http://localhost:8000/redoc
 
@@ -246,14 +248,16 @@ make down
 │   │   ├── common/          # Shared API types, `get_current_user`, error helpers
 │   │   ├── agent/           # Shared agent DTOs (turn request/response)
 │   │   ├── users/           # Auth: register / login (JWT)
-│   │   ├── public/          # Public agent trial routes
-│   │   └── wedding_sites/   # Wedding sites CRUD + owner agent turn
+│   │   ├── public/          # Public agent trial, contact, RSVP submit
+│   │   ├── rsvp_responses/  # Shared RSVP request/response schemas
+│   │   └── wedding_sites/   # Wedding sites CRUD, owner agent turn, owner RSVP list
 │   ├── db/                  # Database configuration
 │   │   ├── db.py            # Database engine and session
 │   │   └── migrations/      # Alembic migrations
 │   ├── domains/             # Domain modules (business logic)
 │   │   ├── agent/           # Assistant orchestration + pluggable LLM backend
 │   │   ├── anonymous_agent_sessions/ # Trial sessions (token hash, cap, config)
+│   │   ├── rsvp_responses/  # Guest RSVP submissions (models, repository, service)
 │   │   ├── wedding_sites/   # Wedding sites (models, repository, service, dependencies)
 │   │   └── users/           # Users + auth helpers (models, repository, service, password, jwt, …)
 │   ├── middleware/          # Custom middleware
