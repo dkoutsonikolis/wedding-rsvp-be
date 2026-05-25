@@ -7,6 +7,7 @@ from api.rsvp_responses.schemas import RsvpResponseRead, RsvpResponsesPageRespon
 from domains.rsvp_responses.constants import (
     RSVP_RESPONSES_PAGE_DEFAULT_LIMIT,
     RSVP_RESPONSES_PAGE_MAX_LIMIT,
+    RSVP_RESPONSES_SEARCH_MAX_LENGTH,
 )
 from domains.rsvp_responses.dependencies import get_rsvp_responses_service
 from domains.rsvp_responses.service import RsvpResponsesService
@@ -22,6 +23,8 @@ async def list_wedding_site_rsvp_responses(
         le=RSVP_RESPONSES_PAGE_MAX_LIMIT,
     ),
     before_response_id: UUID | None = Query(default=None),
+    q: str | None = Query(default=None, max_length=RSVP_RESPONSES_SEARCH_MAX_LENGTH),
+    is_attending: bool | None = Query(default=None),
     current_user: User = Depends(get_current_user),
     rsvp_responses_service: RsvpResponsesService = Depends(get_rsvp_responses_service),
 ) -> RsvpResponsesPageResponse:
@@ -31,6 +34,8 @@ async def list_wedding_site_rsvp_responses(
             owner_user_id=current_user.id,
             limit=limit,
             before_response_id=before_response_id,
+            q=q,
+            is_attending=is_attending,
         )
     except WeddingSiteNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc

@@ -125,6 +125,8 @@ class RsvpResponsesService:
         owner_user_id: UUID,
         limit: int,
         before_response_id: UUID | None = None,
+        q: str | None = None,
+        is_attending: bool | None = None,
     ) -> tuple[list[RsvpResponse], UUID | None]:
         if limit < 1:
             raise ValueError("limit must be at least 1")
@@ -135,10 +137,13 @@ class RsvpResponsesService:
             site_id=site_id,
             owner_user_id=owner_user_id,
         )
+        search_query = self._normalize_optional_text(q)
         rows = await self.repository.list_by_wedding_site_id(
             wedding_site_id=site_id,
             limit=limit + 1,
             before_response_id=before_response_id,
+            q=search_query,
+            is_attending=is_attending,
         )
         if len(rows) <= limit:
             return rows, None

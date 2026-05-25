@@ -19,15 +19,25 @@ async def _submit_rsvp(
     slug: str,
     name: str,
     email: str,
+    *,
+    is_attending: bool = True,
+    party_size: int | None = None,
+    notes: str | None = None,
 ) -> dict:
+    payload: dict = {
+        "name": name,
+        "email": email,
+        "is_attending": is_attending,
+    }
+    if is_attending:
+        payload["party_size"] = 1 if party_size is None else party_size
+    else:
+        payload["party_size"] = 0 if party_size is None else party_size
+    if notes is not None:
+        payload["notes"] = notes
     response = await client.post(
         f"/api/v1/public/wedding-sites/{slug}/rsvp-responses",
-        json={
-            "name": name,
-            "email": email,
-            "is_attending": True,
-            "party_size": 1,
-        },
+        json=payload,
     )
     assert response.status_code == 201
     return response.json()
@@ -140,6 +150,85 @@ async def test__list_rsvp_responses__other_owner(client: AsyncClient):
     )
     # Assert
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test__list_rsvp_responses__is_attending_filter(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    auth_user_site_id: str,
+):
+    # Arrange
+    site_id = auth_user_site_id
+    slug = await _publish_site(client, auth_headers, site_id)
+    await _submit_rsvp(client, slug, "Attending Guest", "yes@example.com", is_attending=True)
+    declined = await _submit_rsvp(
+        client,
+        slug,
+        "Declined Guest",
+        "no@example.com",
+        is_attending=False,
+    )
+    # Act
+    response = await client.get(
+        f"/api/v1/wedding-sites/{site_id}/rsvp-responses",
+        headers=auth_headers,
+        params={"is_attending": False},
+    )
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["id"] == declined["id"]
+    assert data["next_before_response_id"] is None
+
+
+@pytest.mark.asyncio
+async def test__list_rsvp_responses__q_filter(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    auth_user_site_id: str,
+):
+    # Arrange
+    site_id = auth_user_site_id
+    slug = await _publish_site(client, auth_headers, site_id)
+    await _submit_rsvp(client, slug, "Other Guest", "other@example.com")
+    match = await _submit_rsvp(
+        client,
+        slug,
+        "Searchable Guest",
+        "findme@example.com",
+        notes="Bring a plus-one",
+    )
+    # Act
+    response = await client.get(
+        f"/api/v1/wedding-sites/{site_id}/rsvp-responses",
+        headers=auth_headers,
+        params={"q": "plus-one"},
+    )
+    # Assert
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["id"] == match["id"]
+
+
+@pytest.mark.asyncio
+async def test__list_rsvp_responses__q_above_max_length(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    auth_user_site_id: str,
+):
+    # Arrange
+    site_id = auth_user_site_id
+    # Act
+    response = await client.get(
+        f"/api/v1/wedding-sites/{site_id}/rsvp-responses",
+        headers=auth_headers,
+        params={"q": "x" * 101},
+    )
+    # Assert
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio

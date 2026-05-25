@@ -6,6 +6,17 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from domains.rsvp_responses.models import RsvpResponse
 
+_ILIKE_ESCAPE = "\\"
+
+
+def _ilike_contains_pattern(term: str) -> str:
+    escaped = (
+        term.replace(_ILIKE_ESCAPE, _ILIKE_ESCAPE + _ILIKE_ESCAPE)
+        .replace("%", _ILIKE_ESCAPE + "%")
+        .replace("_", _ILIKE_ESCAPE + "_")
+    )
+    return f"%{escaped}%"
+
 
 class RsvpResponsesRepository:
     def __init__(self, session: AsyncSession):
@@ -22,9 +33,23 @@ class RsvpResponsesRepository:
         wedding_site_id: UUID,
         limit: int | None = None,
         before_response_id: UUID | None = None,
+        q: str | None = None,
+        is_attending: bool | None = None,
     ) -> list[RsvpResponse]:
         """Newest-first. ``before_response_id`` returns rows older than that response."""
         stmt = select(RsvpResponse).where(RsvpResponse.wedding_site_id == wedding_site_id)
+        if is_attending is not None:
+            stmt = stmt.where(RsvpResponse.is_attending == is_attending)
+        if q is not None:
+            pattern = _ilike_contains_pattern(q)
+            stmt = stmt.where(
+                or_(
+                    col(RsvpResponse.name).ilike(pattern, escape=_ILIKE_ESCAPE),
+                    col(RsvpResponse.email).ilike(pattern, escape=_ILIKE_ESCAPE),
+                    col(RsvpResponse.phone).ilike(pattern, escape=_ILIKE_ESCAPE),
+                    col(RsvpResponse.notes).ilike(pattern, escape=_ILIKE_ESCAPE),
+                )
+            )
         if before_response_id is not None:
             cursor_row_result = await self.session.exec(
                 select(RsvpResponse).where(
