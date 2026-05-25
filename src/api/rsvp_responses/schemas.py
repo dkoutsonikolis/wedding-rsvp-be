@@ -40,3 +40,12 @@ class RsvpResponseRead(BaseModel):
 class RsvpResponsesPageResponse(BaseModel):
     items: list[RsvpResponseRead]
     next_before_response_id: UUID | None = None
+
+
+class RsvpResponsesSummaryResponse(BaseModel):
+    attending_count: int
+    declined_count: int
+    total_guests: int
+    total_responses: int
+    recent_activity: list[RsvpResponseRead]
+    guest_notes: list[RsvpResponseRead]

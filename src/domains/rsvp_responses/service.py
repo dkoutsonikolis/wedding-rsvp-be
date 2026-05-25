@@ -1,8 +1,11 @@
+from dataclasses import dataclass
 from uuid import UUID
 
 from domains.rsvp_responses.constants import (
     PARTY_SIZE_MAX,
     RSVP_RESPONSES_PAGE_MAX_LIMIT,
+    RSVP_SUMMARY_GUEST_NOTES_LIMIT,
+    RSVP_SUMMARY_RECENT_LIMIT,
 )
 from domains.rsvp_responses.exceptions import (
     InvalidRsvpSubmissionError,
@@ -18,6 +21,16 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 NOTES_MAX_LENGTH = 2000
+
+
+@dataclass(frozen=True)
+class RsvpOwnerSummary:
+    attending_count: int
+    declined_count: int
+    total_guests: int
+    total_responses: int
+    recent_activity: list[RsvpResponse]
+    guest_notes: list[RsvpResponse]
 
 
 class RsvpResponsesService:
@@ -150,3 +163,35 @@ class RsvpResponsesService:
         page_rows = rows[:limit]
         next_before_response_id = page_rows[-1].id
         return page_rows, next_before_response_id
+
+    async def summary_for_owner(
+        self,
+        site_id: UUID,
+        owner_user_id: UUID,
+    ) -> RsvpOwnerSummary:
+        await self.wedding_sites_service.get_by_id_for_user(
+            site_id=site_id,
+            owner_user_id=owner_user_id,
+        )
+        (
+            total_responses,
+            attending_count,
+            declined_count,
+            total_guests,
+        ) = await self.repository.get_summary_counts_for_wedding_site_id(site_id)
+        recent_activity = await self.repository.list_recent_by_wedding_site_id(
+            wedding_site_id=site_id,
+            limit=RSVP_SUMMARY_RECENT_LIMIT,
+        )
+        guest_notes = await self.repository.list_with_notes_by_wedding_site_id(
+            wedding_site_id=site_id,
+            limit=RSVP_SUMMARY_GUEST_NOTES_LIMIT,
+        )
+        return RsvpOwnerSummary(
+            attending_count=attending_count,
+            declined_count=declined_count,
+            total_guests=total_guests,
+            total_responses=total_responses,
+            recent_activity=recent_activity,
+            guest_notes=guest_notes,
+        )
