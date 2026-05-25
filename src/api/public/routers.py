@@ -7,11 +7,13 @@ from api.agent.schemas import (
 )
 from api.common import get_error_response
 from api.public.schemas import PublicClientConfigResponse
+from api.rsvp_responses.schemas import RsvpResponseRead
 
 from .client_config import get_public_client_config
 from .contact import submit_contact_message
 from .create_session import create_public_agent_session
 from .session import get_public_agent_session_state
+from .submit_rsvp import submit_rsvp
 from .turn import public_agent_turn
 
 public_agent_router = APIRouter(prefix="/public/agent", tags=["public-agent"])
@@ -109,4 +111,27 @@ public_router.add_api_route(
         ),
     },
     summary="Submit a public contact form message",
+)
+
+public_router.add_api_route(
+    "/wedding-sites/{slug}/rsvp-responses",
+    submit_rsvp,
+    methods=["POST"],
+    response_model=RsvpResponseRead,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_404_NOT_FOUND: get_error_response(
+            status.HTTP_404_NOT_FOUND,
+            "Wedding site not found or not published",
+        ),
+        status.HTTP_422_UNPROCESSABLE_CONTENT: get_error_response(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Validation error",
+        ),
+        status.HTTP_429_TOO_MANY_REQUESTS: get_error_response(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Too many requests",
+        ),
+    },
+    summary="Submit a public RSVP for a published wedding site",
 )

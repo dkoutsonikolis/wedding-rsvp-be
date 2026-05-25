@@ -17,6 +17,7 @@ os.environ["RATE_LIMIT_AUTH_LOGIN"] = "10000/minute"
 os.environ["RATE_LIMIT_AUTH_REFRESH"] = "10000/minute"
 os.environ["RATE_LIMIT_PUBLIC_AGENT_SESSION"] = "10000/minute"
 os.environ["RATE_LIMIT_PUBLIC_AGENT_TURN"] = "10000/minute"
+os.environ["RATE_LIMIT_PUBLIC_RSVP"] = "10000/minute"
 
 # Import all fixtures to make them available at the top level
 from tests.fixtures.client import *  # noqa: F403, F401
